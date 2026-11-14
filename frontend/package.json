@@ -7,7 +7,8 @@
     "dev": "vite",
     "dev:phone": "vite --mode phone",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "jsqr": "^1.4.0",
@@ -17,6 +18,7 @@
     "react-router-dom": "^6.28.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.49.1",
     "@tailwindcss/vite": "^4.0.0",
     "@types/leaflet": "^1.9.12",
     "@types/react": "^18.3.12",

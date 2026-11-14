@@ -26,3 +26,8 @@ Thumbs.db
 
 # Uploads (verification documents, photos) — never commit user data
 backend/uploads/
+
+# Playwright end-to-end output
+frontend/e2e/screenshots/
+frontend/test-results/
+frontend/playwright-report/

@@ -1,12 +1,11 @@
 // Formatting helpers. South Africa is UTC+2 all year (no daylight saving).
 
+// Same style as the backend's price_display: R1 250.50 (space for thousands,
+// point for cents) so amounts look identical everywhere in the app
 export function rands(cents: number): string {
   const sign = cents < 0 ? "-" : "";
-  const value = (Math.abs(cents) / 100).toLocaleString("en-ZA", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-  return `${sign}R${value}`;
+  const [whole, fraction] = (Math.abs(cents) / 100).toFixed(2).split(".");
+  return `${sign}R${whole.replace(/\B(?=(\d{3})+(?!\d))/g, " ")}.${fraction}`;
 }
 
 const dateTime = new Intl.DateTimeFormat("en-ZA", {

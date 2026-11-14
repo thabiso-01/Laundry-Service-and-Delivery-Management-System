@@ -60,7 +60,7 @@ export function Seals({ items }: { items: Seal[] }) {
         <li key={s.seal_number} className="rounded-lg border border-slate-200 px-2 py-1">
           <span className="font-mono">{s.seal_number}</span>{" "}
           <span className="text-xs text-slate-500">{s.leg}</span>{" "}
-          {s.check_result && <StatusBadge status={s.check_result === "intact" ? "approved" : "rejected"} />}
+          {s.check_result && <Badge color={s.check_result === "intact" ? "green" : "red"}>{label(s.check_result)}</Badge>}
         </li>
       ))}
     </ul>
