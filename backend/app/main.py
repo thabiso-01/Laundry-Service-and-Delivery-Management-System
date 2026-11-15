@@ -18,6 +18,7 @@ from app.api.routes import (
     orders,
     payments,
     photos,
+    privacy,
     qr,
     reviews,
     staff,
@@ -30,6 +31,7 @@ app = FastAPI(title=settings.app_name)
 app.include_router(auth.router)
 app.include_router(laundries.router)
 app.include_router(geocode.router)
+app.include_router(privacy.router)
 app.include_router(orders.router)
 app.include_router(documents.router)
 app.include_router(business.router)

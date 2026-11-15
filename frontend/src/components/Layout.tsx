@@ -73,7 +73,7 @@ export function Layout() {
             {me ? (
               <>
                 {!me.must_change_password && <UnreadBadge />}
-                <NavLink to="/security" className="hidden text-sm text-slate-600 hover:underline sm:block" title="Account security">
+                <NavLink to="/security" className="hidden text-sm text-slate-600 hover:underline sm:block" title="Account & privacy">
                   {me.full_name.split(" ")[0]}
                 </NavLink>
                 <button
@@ -101,7 +101,7 @@ export function Layout() {
         </div>
         {open && (
           <nav className="border-t border-slate-100 px-4 py-2 md:hidden">
-            {[...links, ["/security", "Account security"] as [string, string]].map(([to, text]) => (
+            {[...links, ["/security", "Account & privacy"] as [string, string]].map(([to, text]) => (
               <NavLink key={to} to={to} end onClick={() => setOpen(false)} className="block rounded-lg px-2 py-2 text-sm text-slate-700">
                 {text}
               </NavLink>

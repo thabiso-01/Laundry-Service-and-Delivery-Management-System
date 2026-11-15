@@ -137,3 +137,22 @@ usage policies only allow light traffic: before launch, set
 `GEOCODER_USER_AGENT` to include your contact e-mail, and move to a paid or
 self-hosted geocoder and tile provider for real volumes. Mention in the privacy
 policy that searched addresses are sent to OpenStreetMap (POPIA).
+
+**POPIA rights.** Under *Account & privacy* every user can download all their
+data as JSON (`GET /api/me/data-export`, s23) and delete their account
+(`DELETE /api/me`, s24). Deletion wipes personal details, ID documents,
+notifications, review comments and location history. Records the law requires
+are kept but stripped of identifying details: orders and payments (amounts,
+dates and suburb, for SARS, 5 years), handover/seal/photo evidence, reports and
+the security log. Deletion is refused while an order or delivery job is in
+progress, and laundry owners must hand over or close the business first. The
+privacy policy should state these retention periods.
+
+## End-to-end tests
+
+With the backend and `npm run dev` running and the demo accounts seeded:
+
+```bash
+cd frontend
+npm run e2e        # drives the installed Chrome; screenshots in e2e/screenshots/
+```

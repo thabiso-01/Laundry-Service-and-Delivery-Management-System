@@ -236,7 +236,7 @@ export function Security() {
   if (!me) return <Spinner />;
   return (
     <div className="max-w-xl space-y-4">
-      <PageTitle sub={`${me.full_name} · ${me.email}`}>Account security</PageTitle>
+      <PageTitle sub={`${me.full_name} · ${me.email}`}>Account & privacy</PageTitle>
       <Card title="Two-step login">
         {codes ? (
           <div className="space-y-2">
@@ -272,6 +272,69 @@ export function Security() {
         <div className="mt-3"><Alert>{error}</Alert></div>
       </Card>
       <Card title="Password"><Link to="/change-password" className="text-sm text-sky-700 underline">Change your password</Link></Card>
+      <PrivacyCards />
     </div>
+  );
+}
+
+// POPIA s23 (access) and s24 (deletion)
+function PrivacyCards() {
+  const { me, logout } = useAuth();
+  const navigate = useNavigate();
+  const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const download = useAction();
+  const removal = useAction();
+  if (!me) return null;
+
+  const getData = () => void download.run(async () => {
+    const url = await apiBlobUrl("/api/me/data-export");
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `laundryconnect-my-data-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+
+  const remove = () => void removal.run(async () => {
+    await api("/api/me", { method: "DELETE", json: { password, code: code || null, confirm } });
+    logout();
+    navigate("/?deleted=1", { replace: true });
+  });
+
+  return (
+    <>
+      <Card title="Your data">
+        <p className="mb-3 text-sm text-slate-600">
+          Download a copy of everything LaundryConnect holds about you: your account, addresses, orders,
+          payments, reports, notifications and sign-in history (POPIA section 23).
+        </p>
+        <Alert>{download.error}</Alert>
+        <Button variant="secondary" busy={download.busy} onClick={getData}>Download my data</Button>
+      </Card>
+
+      {me.role !== "admin" && (
+        <Card title="Delete account">
+          <div className="space-y-3 text-sm">
+            <p className="text-slate-600">This can't be undone. We remove your name, contact details, password, home
+              address, ID documents, notifications, review comments and location history.</p>
+            <p className="text-slate-600">The law requires us to keep some records, stripped of your details:</p>
+            <ul className="list-disc space-y-1 pl-5 text-slate-600">
+              <li>orders and payments (amounts, dates and suburb) for tax purposes, for 5 years;</li>
+              <li>handover, seal and photo records, and reports you made, in case of a dispute;</li>
+              <li>our security log, linked only to an anonymous account number.</li>
+            </ul>
+            <Input label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+            {me.mfa_enabled && <Input label="Code from your authenticator app" inputMode="numeric" value={code} onChange={(e) => setCode(e.target.value)} />}
+            <Input label='Type DELETE to confirm' value={confirm} onChange={(e) => setConfirm(e.target.value)} />
+            <Alert>{removal.error}</Alert>
+            <Button variant="danger" busy={removal.busy} disabled={confirm !== "DELETE" || !password} onClick={remove}>
+              Delete my account permanently
+            </Button>
+          </div>
+        </Card>
+      )}
+    </>
   );
 }

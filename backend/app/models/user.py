@@ -61,6 +61,9 @@ class User(TimestampMixin, Base):
     # POPIA: record when the user accepted the privacy policy
     privacy_consent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # POPIA s24: when the user deleted their account (personal details are wiped,
+    # the row stays so retained records still point at an anonymous account)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     customer_profile: Mapped["CustomerProfile | None"] = relationship(back_populates="user")
     driver_profile: Mapped["DriverProfile | None"] = relationship(

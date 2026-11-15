@@ -11,8 +11,10 @@ export function Landing() {
   const { me, loading } = useAuth();
   if (loading) return <Spinner />;
   if (me) return <Navigate to={homeFor(me)} replace />;
+  const deleted = new URLSearchParams(window.location.search).get("deleted") === "1";
   return (
     <div className="mx-auto max-w-3xl py-10 text-center">
+      {deleted && <div className="mb-6 text-left"><Alert kind="success">Your account has been deleted. Thank you for using LaundryConnect.</Alert></div>}
       <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl">Clean laundry, collected and delivered</h1>
       <p className="mt-3 text-slate-600">
         Find a trusted laundry near you, book a collection, and track your laundry until it's back at your door.
