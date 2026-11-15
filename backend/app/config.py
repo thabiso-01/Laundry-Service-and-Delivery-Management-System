@@ -52,6 +52,22 @@ class Settings(BaseSettings):
     payment_webhook_secret: str = ""
     require_payment_before_acceptance: bool = True
 
+    # PayFast (used when PAYMENT_PROVIDER=payfast). Create a free sandbox account
+    # at sandbox.payfast.co.za, set a Salt Passphrase in its Developer Settings,
+    # put the three values here, then run  python -m app.scripts.payfast_check.
+    # For live payments use your real merchant account and PAYFAST_SANDBOX=false.
+    payfast_sandbox: bool = True
+    payfast_merchant_id: str = ""
+    payfast_merchant_key: str = ""
+    payfast_passphrase: str = ""
+    # Security checks on PayFast's notifications – keep on in production
+    payfast_verify_source_ip: bool = True
+    payfast_server_confirmation: bool = True
+    # Where PayFast sends the customer back to, and where it posts notifications.
+    # The API URL must be reachable from the internet (https) for notifications.
+    public_app_url: str = "http://localhost:5173"
+    public_api_url: str = "http://localhost:8000"
+
     # --- Live tracking (SEC-021, SEC-024) ---
     location_ping_min_seconds: int = 10       # ignore pings more often than this
     tracking_stale_minutes: int = 10          # older positions aren't shown as "live"

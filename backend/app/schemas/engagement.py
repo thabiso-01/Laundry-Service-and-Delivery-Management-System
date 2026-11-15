@@ -16,6 +16,9 @@ class CheckoutOut(BaseModel):
     amount_cents: int
     amount_display: str
     checkout_url: str
+    # PayFast: the browser POSTs form_fields (in this order) to form_action
+    form_action: str | None = None
+    form_fields: list[tuple[str, str]] | None = None
 
 
 class PaymentOut(BaseModel):

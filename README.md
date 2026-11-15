@@ -148,6 +148,10 @@ the security log. Deletion is refused while an order or delivery job is in
 progress, and laundry owners must hand over or close the business first. The
 privacy policy should state these retention periods.
 
+**Payments.** Development uses a built-in sandbox gateway. For real payments
+the API supports **PayFast** (signed checkout + fully verified ITN
+notifications): see [docs/PAYMENTS.md](docs/PAYMENTS.md).
+
 **Rate limits.** Login, registration, password changes, reports, photo uploads
 and address search are limited per IP address (429 + `Retry-After` when
 exceeded; the first block per window is audited). Limits are in

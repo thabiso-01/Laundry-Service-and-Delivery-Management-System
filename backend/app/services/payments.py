@@ -81,16 +81,26 @@ def checkout(db: Session, order: Order, customer: User, request: Request) -> Pay
     return payment
 
 
-def checkout_details(payment: Payment) -> dict[str, Any]:
+def checkout_details(payment: Payment, order: Order, customer: User) -> dict[str, Any]:
     """What the frontend needs to send the customer to the provider."""
-    return {
+    details: dict[str, Any] = {
         "provider": payment.provider,
         "reference": payment.reference,
         "amount_cents": payment.amount_cents,
         "amount_display": format_rands(payment.amount_cents),
-        # Sandbox: the app calls this to simulate the gateway's result
-        "checkout_url": f"/api/payments/sandbox/{payment.reference}/complete",
+        "form_action": None,
+        "form_fields": None,
     }
+    if payment.provider == "payfast":
+        from app.services import payfast  # imports this module too
+        form = payfast.checkout_form(payment, order, customer)
+        # The browser must POST these fields, in this order, to form_action
+        details.update(checkout_url=form["action"], form_action=form["action"],
+                       form_fields=form["fields"])
+    else:
+        # Sandbox: the app calls this to simulate the gateway's result
+        details["checkout_url"] = f"/api/payments/sandbox/{payment.reference}/complete"
+    return details
 
 
 # ---------- Provider notification (webhook) ----------
@@ -125,6 +135,13 @@ def handle_notification(db: Session, payload: dict, request: Request | None) -> 
         db.commit()
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid signature")
 
+    return apply_verified(db, payment, provider_id, status_, amount, payload, request)
+
+
+def apply_verified(db: Session, payment: Payment | None, provider_id: str, status_: str,
+                   amount: int, payload: dict, request: Request | None) -> str:
+    """Applies a notification whose authenticity has already been checked, for
+    any provider. status_ is one of: paid, failed, cancelled."""
     if payment is None:
         outcome = "unknown_reference"
     elif payment.status == PaymentStatus.PAID:
@@ -147,6 +164,12 @@ def handle_notification(db: Session, payload: dict, request: Request | None) -> 
         notifications.customer(db, order, "payment.failed", "Payment didn't go through",
                                f"Your payment for order {order.order_number} failed. "
                                "You can try again from the order page.")
+    elif status_ == "cancelled":
+        # The customer backed out on the provider's page
+        outcome = "cancelled"
+        if payment.status == PaymentStatus.PENDING:
+            payment.status = PaymentStatus.CANCELLED
+            payment.provider_payment_id = provider_id
     else:
         outcome = "ignored_status"
 

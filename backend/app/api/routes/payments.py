@@ -4,7 +4,8 @@ import secrets
 import uuid
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Body, HTTPException, Request, status
+from fastapi import APIRouter, Body, HTTPException, Request, Response, status
+from fastapi.concurrency import run_in_threadpool
 from sqlalchemy import select
 
 from app.api.deps import CustomerUser, DbSession
@@ -12,7 +13,7 @@ from app.api.routes.orders import _own_order
 from app.config import settings
 from app.models import Order, Payment
 from app.schemas.engagement import CheckoutOut, PaymentOut, SandboxResultIn
-from app.services import payments
+from app.services import payfast, payments
 
 router = APIRouter(tags=["payments"])
 
@@ -24,7 +25,19 @@ def pay_order(order_id: uuid.UUID, customer: CustomerUser, db: DbSession,
     balance after weighing). Send the customer to `checkout_url`."""
     order = _own_order(db, customer, order_id, lock=True)
     payment = payments.checkout(db, order, customer, request)
-    return CheckoutOut(payment_id=payment.id, **payments.checkout_details(payment))
+    return CheckoutOut(payment_id=payment.id, **payments.checkout_details(payment, order, customer))
+
+
+@router.post("/api/payments/payfast/notify")
+async def payfast_notification(request: Request, db: DbSession) -> Response:
+    """PayFast's ITN. Not for browsers: every notification is checked (signature,
+    PayFast server address, PayFast confirmation, exact amount) before it counts."""
+    if settings.payment_provider != "payfast":
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found")
+    form = await request.form()
+    pairs = [(k, v) for k, v in form.multi_items() if isinstance(v, str)]
+    outcome = await run_in_threadpool(payfast.handle_itn, db, pairs, request)
+    return Response(content=outcome, media_type="text/plain")  # 200 tells PayFast we've got it
 
 
 @router.get("/api/orders/{order_id}/payments", response_model=list[PaymentOut])

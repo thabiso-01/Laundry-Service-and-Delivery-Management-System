@@ -148,11 +148,30 @@ export function OrderDetail() {
   if (error || !order) return <Alert>{error}</Alert>;
 
   const pay = () => void paying.run(async () => {
-    const checkout = await api<{ reference: string; checkout_url: string }>(`/api/orders/${order.id}/pay`, { method: "POST" });
-    // Sandbox gateway: complete the payment straight away. A real gateway redirects here.
+    const checkout = await api<{ provider: string; checkout_url: string; form_action: string | null;
+      form_fields: [string, string][] | null }>(`/api/orders/${order.id}/pay`, { method: "POST" });
+    if (checkout.form_action && checkout.form_fields) {
+      // Real gateway (PayFast): post the signed form; the customer pays on PayFast's
+      // page and comes back to this order page afterwards
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = checkout.form_action;
+      for (const [name, value] of checkout.form_fields) {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = name;
+        input.value = value;
+        form.appendChild(input);
+      }
+      document.body.appendChild(form);
+      form.submit();
+      return;
+    }
+    // Sandbox gateway: complete the payment straight away
     await api(checkout.checkout_url, { json: { outcome: "paid" } });
     await reload();
   });
+  const returned = new URLSearchParams(window.location.search).get("payment");
 
   const canCancel = order.status === "placed" || order.status === "accepted";
 
@@ -160,6 +179,12 @@ export function OrderDetail() {
     <div>
       <OrderHeader order={order} />
       {order.declined_reason && <div className="mb-4"><Alert>Declined by the laundry: {order.declined_reason}</Alert></div>}
+      {returned === "return" && order.balance_cents > 0 && (
+        <div className="mb-4"><Alert kind="info">Thanks! We're waiting for PayFast to confirm your payment. This page updates by itself.</Alert></div>
+      )}
+      {returned === "cancelled" && order.balance_cents > 0 && (
+        <div className="mb-4"><Alert kind="warning">Payment was cancelled. You can try again below.</Alert></div>
+      )}
       <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
         <div className="space-y-4">
           {order.balance_cents > 0 && !["cancelled", "declined"].includes(order.status) && (
@@ -170,7 +195,7 @@ export function OrderDetail() {
               </p>
               <Alert>{paying.error}</Alert>
               <Button busy={paying.busy} onClick={pay}>Pay {rands(order.balance_cents)}</Button>
-              <p className="mt-2 text-xs text-slate-500">Test mode: payments go through a sandbox gateway; no real money is taken.</p>
+              <p className="mt-2 text-xs text-slate-500">Payments are processed securely; we never see your card details.</p>
             </Card>
           )}
           {(order.status === "accepted" || order.status === "out_for_delivery") && <CodeCard order={order} />}

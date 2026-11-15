@@ -95,6 +95,18 @@ def no_real_geocoding(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def no_real_payfast(monkeypatch):
+    """Tests must never call PayFast or resolve its servers over the internet."""
+    from app.services import payfast
+
+    def _blocked(*args, **kwargs):
+        raise AssertionError("test tried to contact PayFast")
+
+    monkeypatch.setattr(payfast, "_confirm_with_payfast", _blocked)
+    monkeypatch.setattr(payfast, "_resolve_hosts", _blocked)
+
+
+@pytest.fixture(autouse=True)
 def fresh_rate_limits():
     """Every test starts with empty per-IP counters."""
     from app.core.ratelimit import limiter
