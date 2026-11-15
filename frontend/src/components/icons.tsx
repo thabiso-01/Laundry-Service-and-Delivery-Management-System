@@ -47,6 +47,13 @@ const PATHS = {
   upload: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="m17 8-5-5-5 5M12 3v12" /></>,
   navigation: <path d="m3 11 19-9-9 19-2-8z" />,
   power: <><path d="M12 2v10" /><path d="M18.4 6.6a9 9 0 1 1-12.8 0" /></>,
+  shirt: <path d="M20.4 3.5 16 2a4 4 0 0 1-8 0L3.6 3.5a2 2 0 0 0-1.3 2.2l.6 3.5a1 1 0 0 0 1 .8H6v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V10h2.1a1 1 0 0 0 1-.8l.6-3.5a2 2 0 0 0-1.3-2.2z" />,
+  iron: <><path d="M3 18h18l-1.4-6.3A4.5 4.5 0 0 0 15.2 8H9a6 6 0 0 0-6 6z" /><path d="M8 8V6.5A2.5 2.5 0 0 1 10.5 4H16M7 14h.01M11 14h.01" /></>,
+  hanger: <><path d="M10 6a2 2 0 1 1 2 2v2" /><path d="M12 10 3.4 16.4A1 1 0 0 0 4 18.2h16a1 1 0 0 0 .6-1.8z" /></>,
+  bed: <><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8M4 10V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4M12 4v6M2 17h20" /></>,
+  shoe: <><path d="M2 17h18.5a1.5 1.5 0 0 0 1.5-1.5c0-1.6-1.3-2.7-2.9-3L14 11l-2.5-5H7L6 8.5 2 9z" /><path d="M2 17v2.5h20V17M8.5 11.5l1.5-1M10.5 14l1.5-1" /></>,
+  home: <><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" /></>,
+  sliders: <><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0" /><circle cx="16" cy="6" r="2" /><circle cx="10" cy="12" r="2" /><circle cx="18" cy="18" r="2" /></>,
 } as const;
 
 export type IconName = keyof typeof PATHS;
@@ -63,10 +70,10 @@ export function Icon({ name, className = "h-5 w-5", ...rest }: { name: IconName 
 export function Logo({ className = "" }: { className?: string }) {
   return (
     <span className={`inline-flex items-center gap-2 font-semibold tracking-tight text-slate-900 ${className}`}>
-      <span className="grid h-8 w-8 place-items-center rounded-lg bg-brand-700 text-white shadow-sm">
+      <span className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-sm shadow-brand-600/30">
         <Icon name="washer" className="h-[18px] w-[18px]" />
       </span>
-      <span className="text-[17px]">Laundry<span className="text-brand-700">Connect</span></span>
+      <span className="text-[17px]">Laundry<span className="text-brand-600">Connect</span></span>
     </span>
   );
 }

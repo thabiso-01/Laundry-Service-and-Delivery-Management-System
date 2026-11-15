@@ -14,12 +14,12 @@ import { Icon, type IconName } from "./icons";
 
 type Variant = "primary" | "secondary" | "danger" | "ghost";
 const VARIANTS: Record<Variant, string> = {
-  primary: "bg-brand-700 text-white shadow-sm hover:bg-brand-800 disabled:bg-brand-300 disabled:shadow-none",
+  primary: "bg-brand-600 text-white shadow-sm shadow-brand-600/25 hover:bg-brand-700 disabled:bg-brand-300 disabled:shadow-none",
   secondary: "bg-white text-slate-800 ring-1 ring-inset ring-slate-300 shadow-sm hover:bg-slate-50 disabled:text-slate-400",
   danger: "bg-rose-600 text-white shadow-sm hover:bg-rose-700 disabled:bg-rose-300",
   ghost: "text-brand-700 hover:bg-brand-50 disabled:text-slate-400",
 };
-const SIZES = { sm: "h-8 px-3 text-sm", md: "h-10 px-4 text-sm", lg: "h-12 px-5 text-base" };
+const SIZES = { sm: "h-8 rounded-lg px-3 text-sm", md: "h-10 rounded-xl px-4 text-sm", lg: "h-12 rounded-full px-6 text-base" };
 
 export function Button({
   variant = "primary",
@@ -32,7 +32,7 @@ export function Button({
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: keyof typeof SIZES; icon?: IconName; busy?: boolean }) {
   return (
     <button
-      className={`inline-flex items-center justify-center gap-2 rounded-lg font-medium whitespace-nowrap transition-colors disabled:cursor-not-allowed ${SIZES[size]} ${VARIANTS[variant]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 font-medium whitespace-nowrap transition-colors disabled:cursor-not-allowed ${SIZES[size]} ${VARIANTS[variant]} ${className}`}
       disabled={busy || rest.disabled}
       {...rest}
     >
@@ -49,7 +49,7 @@ export function ButtonLink({ to, variant = "primary", size = "md", icon, classNa
   to: string; variant?: Variant; size?: keyof typeof SIZES; icon?: IconName; className?: string; children: ReactNode;
 }) {
   return (
-    <Link to={to} className={`inline-flex items-center justify-center gap-2 rounded-lg font-medium whitespace-nowrap transition-colors ${SIZES[size]} ${VARIANTS[variant]} ${className}`}>
+    <Link to={to} className={`inline-flex items-center justify-center gap-2 font-medium whitespace-nowrap transition-colors ${SIZES[size]} ${VARIANTS[variant]} ${className}`}>
       {icon && <Icon name={icon} className="h-4 w-4" />}
       {children}
     </Link>
@@ -67,7 +67,7 @@ function Field({ label, hint, children }: { label?: string; hint?: ReactNode; ch
 }
 
 const control =
-  "block w-full rounded-lg border-0 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 outline-none placeholder:text-slate-400 transition focus:ring-2 focus:ring-brand-600 disabled:bg-slate-50 disabled:text-slate-500";
+  "block w-full rounded-xl border-0 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 outline-none placeholder:text-slate-400 transition focus:ring-2 focus:ring-brand-600 disabled:bg-slate-50 disabled:text-slate-500";
 
 export function Input({ label, hint, className = "", ...rest }: InputHTMLAttributes<HTMLInputElement> & { label?: string; hint?: ReactNode }) {
   return (
@@ -126,7 +126,7 @@ export function Card({ title, description, actions, children, className = "", pa
   padded?: boolean;
 }) {
   return (
-    <section className={`rounded-xl border border-slate-200 bg-white shadow-card ${className}`}>
+    <section className={`rounded-2xl border border-slate-100 bg-white shadow-card ${className}`}>
       {(title || actions) && (
         <header className="flex flex-wrap items-start justify-between gap-2 border-b border-slate-100 px-4 py-3.5 sm:px-5">
           <div className="min-w-0">
@@ -303,8 +303,8 @@ export function Stat({ label, value, icon, tone = "slate" }: { label: string; va
     violet: "bg-violet-50 text-violet-700", emerald: "bg-emerald-50 text-emerald-700",
   };
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-card">
-      {icon && <span className={`grid h-10 w-10 place-items-center rounded-lg ${tones[tone]}`}><Icon name={icon} /></span>}
+    <div className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-white p-4 shadow-card">
+      {icon && <span className={`grid h-11 w-11 place-items-center rounded-full ${tones[tone]}`}><Icon name={icon} /></span>}
       <div>
         <p className="text-xs font-medium text-slate-500">{label}</p>
         <p className="text-2xl font-semibold tracking-tight text-slate-900">{value}</p>
@@ -316,12 +316,12 @@ export function Stat({ label, value, icon, tone = "slate" }: { label: string; va
 // Segmented tabs
 export function Tabs({ items, value, onChange }: { items: { label: string; count?: number }[]; value: number; onChange: (i: number) => void }) {
   return (
-    <div role="tablist" className="inline-flex rounded-lg bg-slate-100 p-1">
+    <div role="tablist" className="inline-flex rounded-full bg-white p-1 shadow-card ring-1 ring-slate-100">
       {items.map((t, i) => (
         <button key={t.label} role="tab" aria-selected={value === i} onClick={() => onChange(i)}
-          className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition ${value === i ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"}`}>
+          className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition ${value === i ? "bg-brand-600 text-white shadow-sm" : "text-slate-600 hover:text-slate-900"}`}>
           {t.label}
-          {t.count != null && t.count > 0 && <span className="rounded-full bg-brand-100 px-1.5 text-xs text-brand-800">{t.count}</span>}
+          {t.count != null && t.count > 0 && <span className="rounded-full bg-white/25 px-1.5 text-xs">{t.count}</span>}
         </button>
       ))}
     </div>

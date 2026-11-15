@@ -129,10 +129,10 @@ function SideNav({ items, onNavigate }: { items: NavItem[]; onNavigate?: () => v
       {items.map((item) => (
         <NavLink key={item.to} to={item.to} end={item.end ?? true} onClick={onNavigate}
           className={({ isActive }) =>
-            `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${isActive ? "bg-brand-50 text-brand-800" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"}`}>
+            `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${isActive ? "bg-brand-600 text-white shadow-sm shadow-brand-600/25" : "text-slate-600 hover:bg-brand-50 hover:text-brand-800"}`}>
           {({ isActive }) => (
             <>
-              <Icon name={item.icon} className={`h-[18px] w-[18px] ${isActive ? "text-brand-700" : "text-slate-400"}`} />
+              <Icon name={item.icon} className={`h-[18px] w-[18px] ${isActive ? "text-white" : "text-slate-400"}`} />
               {item.text}
             </>
           )}
@@ -151,9 +151,9 @@ function AppShell() {
   const items = me && !me.must_change_password ? NAV[me.role] : [];
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-canvas">
       {/* Desktop sidebar */}
-      <aside className="no-print fixed inset-y-0 left-0 z-20 hidden w-64 flex-col border-r border-slate-200 bg-white lg:flex">
+      <aside className="no-print fixed inset-y-0 left-0 z-20 hidden w-64 flex-col border-r border-slate-100 bg-white lg:flex">
         <div className="flex h-16 items-center px-5"><Link to="/"><Logo /></Link></div>
         <div className="flex-1 overflow-y-auto px-3 py-4"><SideNav items={items} /></div>
         <div className="border-t border-slate-100 px-5 py-4 text-xs text-slate-400">
@@ -180,7 +180,7 @@ function AppShell() {
       )}
 
       <div className="lg:pl-64">
-        <header className="no-print sticky top-0 z-10 flex h-16 items-center gap-3 border-b border-slate-200 bg-white/90 px-4 backdrop-blur sm:px-6">
+        <header className="no-print sticky top-0 z-10 flex h-16 items-center gap-3 border-b border-slate-100 bg-white/90 px-4 backdrop-blur sm:px-6">
           {items.length > 0 && (
             <button className="-ml-1 grid h-9 w-9 place-items-center rounded-lg text-slate-600 hover:bg-slate-100 lg:hidden" onClick={() => setOpen(true)} aria-label="Menu">
               <Icon name="menu" />
@@ -192,11 +192,62 @@ function AppShell() {
             <AccountMenu />
           </div>
         </header>
-        <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
+        <main className="mx-auto max-w-6xl px-4 pt-6 pb-28 sm:px-6 sm:pt-8 lg:pb-8">
           <Outlet />
         </main>
       </div>
+      {me && !me.must_change_password && <TabBar role={me.role} />}
     </div>
+  );
+}
+
+// Phone-style tab bar along the bottom of the screen (phones and small tablets)
+const TABS: Record<Role, NavItem[]> = {
+  customer: [
+    { to: "/search", text: "Home", icon: "home" },
+    { to: "/orders", text: "Orders", icon: "package" },
+    { to: "/notifications", text: "Alerts", icon: "bell" },
+    { to: "/security", text: "Profile", icon: "user" },
+  ],
+  business: [
+    { to: "/business", text: "Orders", icon: "inbox", end: true },
+    { to: "/business/scan", text: "Scan", icon: "scan" },
+    { to: "/notifications", text: "Alerts", icon: "bell" },
+    { to: "/business/profile", text: "Business", icon: "store" },
+  ],
+  driver: [
+    { to: "/driver", text: "Jobs", icon: "truck", end: true },
+    { to: "/documents", text: "Documents", icon: "file" },
+    { to: "/notifications", text: "Alerts", icon: "bell" },
+    { to: "/security", text: "Profile", icon: "user" },
+  ],
+  admin: [
+    { to: "/admin", text: "Verify", icon: "shield", end: true },
+    { to: "/admin/incidents", text: "Incidents", icon: "flag" },
+    { to: "/admin/routes", text: "Routes", icon: "route" },
+    { to: "/notifications", text: "Alerts", icon: "bell" },
+  ],
+};
+
+function TabBar({ role }: { role: Role }) {
+  return (
+    <nav aria-label="Tabs" className="no-print fixed inset-x-0 bottom-0 z-30 border-t border-slate-100 bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_20px_-8px_rgb(30_41_99/0.15)] backdrop-blur lg:hidden">
+      <div className="mx-auto grid max-w-md grid-cols-4">
+        {TABS[role].map((t) => (
+          <NavLink key={t.to} to={t.to} end={t.end ?? true}
+            className={({ isActive }) => `flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium ${isActive ? "text-brand-600" : "text-slate-400"}`}>
+            {({ isActive }) => (
+              <>
+                <span className={`grid h-7 w-12 place-items-center rounded-full transition ${isActive ? "bg-brand-50" : ""}`}>
+                  <Icon name={t.icon} className="h-5 w-5" />
+                </span>
+                {t.text}
+              </>
+            )}
+          </NavLink>
+        ))}
+      </div>
+    </nav>
   );
 }
 
@@ -205,14 +256,14 @@ function PublicShell() {
   const location = useLocation();
   const wide = location.pathname === "/";
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
-      <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/90 backdrop-blur">
+    <div className="flex min-h-screen flex-col bg-canvas">
+      <header className="sticky top-0 z-10 border-b border-slate-100 bg-white/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4 sm:px-6">
           <Link to="/"><Logo /></Link>
           <nav className="ml-auto flex items-center gap-1 sm:gap-2">
             <NavLink to="/search" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 sm:block">Find a laundry</NavLink>
             <NavLink to="/login" className="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">Log in</NavLink>
-            <NavLink to="/register" className="rounded-lg bg-brand-700 px-3.5 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-800">Sign up</NavLink>
+            <NavLink to="/register" className="rounded-full bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-sm shadow-brand-600/25 hover:bg-brand-700">Sign up</NavLink>
           </nav>
         </div>
       </header>

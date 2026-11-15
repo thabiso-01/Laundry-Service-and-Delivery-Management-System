@@ -1,13 +1,14 @@
 import { useMemo, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { api } from "../../api/client";
 import type { LaundryDetail, Order, Quote } from "../../api/types";
 import { useAuth } from "../../auth/AuthContext";
 import { AddressPicker, EMPTY_ADDRESS, type AddressValue } from "../../components/AddressPicker";
 import { MapView } from "../../components/MapView";
 import { Icon } from "../../components/icons";
-import { Alert, Button, ButtonLink, Card, Empty, PageTitle, Select, Spinner, Stars, TextArea } from "../../components/ui";
-import { DEFAULT_LOCATION, UNIT_LABEL, label, rands, slots, when } from "../../lib/format";
+import { CATEGORY_INFO, coverFor } from "../../lib/categories";
+import { Alert, Button, ButtonLink, Card, Empty, Select, Spinner, Stars, TextArea } from "../../components/ui";
+import { DEFAULT_LOCATION, UNIT_LABEL, rands, slots, when } from "../../lib/format";
 import { useAction, useAsync } from "../../lib/useAsync";
 
 interface ReviewOut { id: string; rating: number; comment: string | null; reviewer: string; created_at: string }
@@ -76,58 +77,80 @@ export function LaundryPage() {
 
   const setQuantity = (sid: string, n: number) => { setQuote(null); setQty({ ...qty, [sid]: Math.max(0, Math.min(100, n || 0)) }); };
   const isCustomer = me?.role === "customer";
+  const itemCount = chosen.reduce((sum, s) => sum + (qty[s.id] ?? 0), 0);
+  const estimate = chosen.reduce((sum, s) => sum + s.price_cents * (qty[s.id] ?? 0), 0);
 
   return (
     <div>
-      <PageTitle back={{ to: `/search?lat=${lat}&lng=${lng}`, label: "All laundries" }}
-        sub={
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-            <span className="inline-flex items-center gap-1"><Icon name="pin" className="h-4 w-4" />{[l.address_line, l.suburb, l.city].filter(Boolean).join(", ")}</span>
-            <Stars value={l.rating_avg} count={l.rating_count} />
+      {/* Cover photo with name and rating */}
+      <section className="relative mb-6 overflow-hidden rounded-3xl shadow-raised">
+        <img src={coverFor(l.id)} alt="" className="h-56 w-full object-cover sm:h-72" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-900/30 to-transparent" />
+        <Link to={`/search?lat=${lat}&lng=${lng}`} aria-label="All laundries"
+          className="absolute left-4 top-4 grid h-10 w-10 place-items-center rounded-full bg-white/90 text-slate-800 shadow-sm backdrop-blur hover:bg-white">
+          <Icon name="arrowLeft" className="h-5 w-5" />
+        </Link>
+        <div className="absolute inset-x-0 bottom-0 p-5 text-white sm:p-7">
+          <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-medium backdrop-blur">
+            <Icon name="washer" className="h-3.5 w-3.5" /> Laundry
+          </span>
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">{l.business_name}</h1>
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-200">
+            {l.rating_avg != null
+              ? <span className="inline-flex items-center gap-1 font-medium text-white"><Icon name="star" className="h-4 w-4 fill-amber-400 text-amber-400" />{l.rating_avg.toFixed(1)} <span className="font-normal text-slate-300">({l.rating_count} reviews)</span></span>
+              : <span>No ratings yet</span>}
+            <span className="inline-flex items-center gap-1"><Icon name="pin" className="h-4 w-4" />{[l.suburb, l.city].filter(Boolean).join(", ")}</span>
             {l.distance_km != null && <span>{l.distance_km.toFixed(1)} km away</span>}
-            {l.contact_phone && <a href={`tel:${l.contact_phone}`} className="inline-flex items-center gap-1 hover:text-slate-800"><Icon name="phone" className="h-4 w-4" />{l.contact_phone}</a>}
           </div>
-        }>
-        {l.business_name}
-      </PageTitle>
+        </div>
+      </section>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div className="min-w-0 space-y-5">
-          {l.description && <p className="text-slate-700">{l.description}</p>}
-
-          <div className="overflow-hidden rounded-xl border border-slate-200 shadow-card">
-            <MapView height={200} zoom={14} points={[{ latitude: l.latitude, longitude: l.longitude, label: l.business_name, color: "green" }]} />
-          </div>
+          <Card title="About">
+            {l.description && <p className="mb-4 text-slate-700">{l.description}</p>}
+            <div className="grid gap-4 sm:grid-cols-[1fr_220px]">
+              <div className="space-y-2 text-sm text-slate-600">
+                <p className="flex items-start gap-2"><Icon name="pin" className="mt-0.5 h-4 w-4 text-brand-600" />{[l.address_line, l.suburb, l.city].filter(Boolean).join(", ")}</p>
+                {l.contact_phone && <p><a href={`tel:${l.contact_phone}`} className="inline-flex items-center gap-2 hover:text-slate-900"><Icon name="phone" className="h-4 w-4 text-brand-600" />{l.contact_phone}</a></p>}
+                <p className="flex items-center gap-2"><Icon name="shield" className="h-4 w-4 text-brand-600" />Verified by LaundryConnect</p>
+              </div>
+              <div className="overflow-hidden rounded-2xl ring-1 ring-slate-100">
+                <MapView height={140} zoom={14} points={[{ latitude: l.latitude, longitude: l.longitude, label: l.business_name, color: "green" }]} />
+              </div>
+            </div>
+          </Card>
 
           <Card title={isCustomer ? "1. Choose your services" : "Services & prices"}
-            description={isCustomer ? "Set how much of each you need. Per-kg amounts are an estimate." : undefined} padded={false}>
+            description={isCustomer ? "Tap + to add. Per-kg amounts are an estimate." : undefined} padded={false}>
             <ul className="divide-y divide-slate-100">
               {l.services.map((s) => {
                 const n = qty[s.id] ?? 0;
+                const info = CATEGORY_INFO[s.category] ?? CATEGORY_INFO.other;
                 return (
-                  <li key={s.id} className={`flex flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-5 ${n > 0 ? "bg-brand-50/40" : ""}`}>
-                    <div className="min-w-0">
+                  <li key={s.id} className={`flex items-center gap-3 px-4 py-4 transition sm:px-5 ${n > 0 ? "bg-brand-50/50" : ""}`}>
+                    <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl ${n > 0 ? "bg-brand-600 text-white" : "bg-brand-50 text-brand-600"}`}>
+                      <Icon name={info.icon} className="h-6 w-6" />
+                    </span>
+                    <div className="min-w-0 flex-1">
                       <p className="font-medium text-slate-900">{s.name}</p>
+                      <p className="text-sm font-semibold text-brand-600">{s.price_display}</p>
                       <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-slate-500">
-                        <span>{label(s.category)}</span><span>·</span>
                         <span className="inline-flex items-center gap-1"><Icon name="clock" className="h-3 w-3" />ready in {s.turnaround_hours} h</span>
-                        {s.min_quantity > 1 && <><span>·</span><span>minimum {s.min_quantity} {UNIT_LABEL[s.pricing_unit]}</span></>}
+                        {s.min_quantity > 1 && <span>· min {s.min_quantity} {UNIT_LABEL[s.pricing_unit]}</span>}
                       </p>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <span className="text-sm font-semibold text-slate-900">{s.price_display}</span>
-                      {isCustomer && (
-                        <div className="flex items-center rounded-lg shadow-sm ring-1 ring-slate-300 ring-inset">
-                          <button type="button" aria-label={`Less ${s.name}`} disabled={n === 0} onClick={() => setQuantity(s.id, n - 1)}
-                            className="grid h-9 w-9 place-items-center rounded-l-lg text-lg text-slate-600 hover:bg-slate-50 disabled:text-slate-300">−</button>
-                          <input type="number" min={0} max={100} aria-label={`Quantity of ${s.name}`} value={n}
-                            onChange={(e) => setQuantity(s.id, Number(e.target.value))}
-                            className="h-9 w-12 border-x border-slate-200 text-center text-sm font-medium tabular-nums outline-none [appearance:textfield] focus:bg-brand-50 [&::-webkit-inner-spin-button]:appearance-none" />
-                          <button type="button" aria-label={`More ${s.name}`} onClick={() => setQuantity(s.id, n + 1)}
-                            className="grid h-9 w-9 place-items-center rounded-r-lg text-lg text-slate-600 hover:bg-slate-50">+</button>
-                        </div>
-                      )}
-                    </div>
+                    {isCustomer && (
+                      <div className="flex shrink-0 items-center gap-1.5">
+                        <button type="button" aria-label={`Less ${s.name}`} disabled={n === 0} onClick={() => setQuantity(s.id, n - 1)}
+                          className="grid h-8 w-8 place-items-center rounded-full text-lg leading-none text-brand-600 ring-1 ring-brand-200 transition hover:bg-brand-50 disabled:text-slate-300 disabled:ring-slate-200">−</button>
+                        <input type="number" min={0} max={100} aria-label={`Quantity of ${s.name}`} value={n}
+                          onChange={(e) => setQuantity(s.id, Number(e.target.value))}
+                          className="h-8 w-10 rounded-lg bg-transparent text-center text-sm font-semibold tabular-nums outline-none [appearance:textfield] focus:bg-white focus:ring-2 focus:ring-brand-600 [&::-webkit-inner-spin-button]:appearance-none" />
+                        <button type="button" aria-label={`More ${s.name}`} onClick={() => setQuantity(s.id, n + 1)}
+                          className="grid h-8 w-8 place-items-center rounded-full bg-brand-600 text-lg leading-none text-white shadow-sm shadow-brand-600/30 transition hover:bg-brand-700">+</button>
+                      </div>
+                    )}
                   </li>
                 );
               })}
@@ -155,7 +178,7 @@ export function LaundryPage() {
           </Card>
         </div>
 
-        <aside>
+        <aside id="book" className="scroll-mt-20">
           <div className="lg:sticky lg:top-24">
             <Card title={isCustomer ? "2. Book a collection" : "Book a collection"}>
               {!me ? (
@@ -196,6 +219,17 @@ export function LaundryPage() {
                     <Button size="lg" variant={ready ? "primary" : "secondary"} className="w-full" busy={quoting.busy} disabled={!ready} onClick={getQuote}>See price</Button>
                   )}
                   {quote && <p className="text-center text-xs text-slate-500">You'll pay on the next screen.</p>}
+                  {chosen.length > 0 && !quote && (
+                    <div className="fixed inset-x-3 bottom-[76px] z-20 flex items-center gap-3 rounded-2xl bg-slate-900 p-3 pl-4 text-white shadow-raised lg:hidden">
+                      <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/10"><Icon name="washer" /></span>
+                      <div className="min-w-0 flex-1 leading-tight">
+                        <p className="text-sm font-semibold">{itemCount} item{itemCount === 1 ? "" : "s"} · {rands(estimate)}</p>
+                        <p className="text-xs text-slate-400">plus collection & delivery</p>
+                      </div>
+                      <button type="button" onClick={() => document.getElementById("book")?.scrollIntoView({ behavior: "smooth" })}
+                        className="rounded-full bg-brand-500 px-5 py-2 text-sm font-semibold text-white hover:bg-brand-400">Proceed</button>
+                    </div>
+                  )}
                 </div>
               )}
             </Card>
