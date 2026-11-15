@@ -1,0 +1,43 @@
+# SITE_ADDRESS is a domain (e.g. laundryconnect.duckdns.org → automatic HTTPS
+# from Let's Encrypt) or ":80" for plain HTTP when testing locally.
+{$SITE_ADDRESS::80} {
+	encode zstd gzip
+
+	header {
+		# Browsers must use HTTPS from now on (ignored over plain http)
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		X-Frame-Options "DENY"
+		# Camera for QR scanning and location for maps/tracking, only on this site
+		Permissions-Policy "camera=(self), geolocation=(self), microphone=()"
+		-Server
+	}
+
+	# Uploads are capped at 5 MB by the API; leave a little room
+	request_body {
+		max_size 10MB
+	}
+
+	handle /api/* {
+		reverse_proxy api:8000
+	}
+	handle /docs* {
+		reverse_proxy api:8000
+	}
+	handle /openapi.json {
+		reverse_proxy api:8000
+	}
+
+	# The React app: unknown paths fall back to index.html (client-side routing)
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}

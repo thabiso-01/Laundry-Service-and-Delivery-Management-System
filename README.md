@@ -19,6 +19,10 @@ frontend/           React web app (http://localhost:5173)
 docker-compose.yml  PostgreSQL database
 ```
 
+**Deploying:** free on Oracle Cloud (Johannesburg) with Docker Compose and
+automatic HTTPS – step by step in [docs/DEPLOY.md](docs/DEPLOY.md). Try the
+production setup locally first with `python deploy/make_env.py --local`.
+
 ## Getting started
 
 **1. Environment files** (first time only)

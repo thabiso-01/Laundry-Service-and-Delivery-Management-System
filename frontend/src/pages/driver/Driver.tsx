@@ -156,6 +156,9 @@ export function DriverJobPage() {
   if (error || !job) return <Alert>{error}</Alert>;
 
   const handover = (path: string, body: Record<string, unknown>) => void run(async () => {
+    // Clear the previous step's "Done" straight away, so it can't be mistaken
+    // for this step's result while the request is still running (or if it fails)
+    setMessage(null);
     const pos = await currentPosition().catch(() => DEFAULT_LOCATION);
     const out = await api<{ incident_reference?: string | null; location_flagged: boolean }>(`/api/driver/jobs/${job.id}/${path}`, { json: { ...body, ...pos } });
     setMessage(out.incident_reference ? `Done. A seal problem was recorded as ${out.incident_reference}.` : "Done ✔");

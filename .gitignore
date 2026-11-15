@@ -35,3 +35,7 @@ frontend/playwright-report/
 # Backups (encrypted, but never in git)
 backend/backups/
 backend/uploads.before-restore-*/
+
+# Production secrets
+.env.prod
+backups/
