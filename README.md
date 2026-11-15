@@ -148,6 +148,10 @@ the security log. Deletion is refused while an order or delivery job is in
 progress, and laundry owners must hand over or close the business first. The
 privacy policy should state these retention periods.
 
+**Backups.** `python -m app.scripts.backup` makes an encrypted backup of the
+database and uploaded files and test-restores it automatically. Set it up to run
+daily and copy it off the server: see [docs/BACKUPS.md](docs/BACKUPS.md).
+
 ## End-to-end tests
 
 With the backend and `npm run dev` running and the demo accounts seeded:

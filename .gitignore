@@ -31,3 +31,7 @@ backend/uploads/
 frontend/e2e/screenshots/
 frontend/test-results/
 frontend/playwright-report/
+
+# Backups (encrypted, but never in git)
+backend/backups/
+backend/uploads.before-restore-*/

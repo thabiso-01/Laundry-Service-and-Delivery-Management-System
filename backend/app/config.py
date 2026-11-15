@@ -76,6 +76,18 @@ class Settings(BaseSettings):
     geocoder_country_codes: str = "za"
     geocoder_requests_per_minute_per_ip: int = 30
 
+    # --- Backups (SEC-046) ---
+    backup_dir: str = "backups"
+    # Fernet key that encrypts backups (they hold ID documents and personal data).
+    # Make one with:  python -m app.scripts.backup --generate-key
+    # Store it somewhere OTHER than the backups (password manager / vault):
+    # without it, backups can't be restored.
+    backup_encryption_key: str = ""
+    backup_keep_days: int = 30
+    backup_min_keep: int = 3
+    # When pg_dump / pg_restore aren't installed, run them inside this container
+    backup_docker_container: str = "laundryconnect-db"
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
