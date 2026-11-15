@@ -12,7 +12,7 @@ Why through the backend instead of straight from the browser:
 
 import threading
 import time
-from collections import OrderedDict, defaultdict, deque
+from collections import OrderedDict
 from typing import Any
 
 import httpx
@@ -55,27 +55,7 @@ cache = _Cache()
 _upstream_lock = threading.Lock()
 _last_upstream = 0.0
 
-# Per-IP sliding window
-_ip_hits: dict[str, deque[float]] = defaultdict(deque)
-_ip_lock = threading.Lock()
-
-
-def check_rate_limit(ip: str | None) -> None:
-    key = ip or "unknown"
-    now = time.monotonic()
-    with _ip_lock:
-        hits = _ip_hits[key]
-        while hits and now - hits[0] > 60:
-            hits.popleft()
-        if len(hits) >= settings.geocoder_requests_per_minute_per_ip:
-            raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS,
-                                "Too many address searches. Wait a minute and try again")
-        hits.append(now)
-
-
-def reset_limits() -> None:
-    with _ip_lock:
-        _ip_hits.clear()
+# Per-IP limits use the shared limiter in app.core.ratelimit (see the routes)
 
 
 def _fetch(path: str, params: dict[str, Any]) -> Any:

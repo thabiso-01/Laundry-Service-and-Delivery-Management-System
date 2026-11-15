@@ -76,6 +76,17 @@ class Settings(BaseSettings):
     geocoder_country_codes: str = "za"
     geocoder_requests_per_minute_per_ip: int = 30
 
+    # --- Per-IP rate limits (SEC-038, SEC-040) ---
+    # Counted per client IP. Behind a reverse proxy, start uvicorn with
+    # --proxy-headers --forwarded-allow-ips=<proxy IP> so the real IP is used.
+    ratelimit_enabled: bool = True
+    # Generous per minute: staff on one shop Wi-Fi or a mobile network share an IP
+    ratelimit_login_per_minute: int = 20
+    ratelimit_login_per_hour: int = 100
+    ratelimit_register_per_hour: int = 10
+    ratelimit_password_change_per_15_min: int = 10
+    ratelimit_reports_per_hour: int = 30
+
     # --- Backups (SEC-046) ---
     backup_dir: str = "backups"
     # Fernet key that encrypts backups (they hold ID documents and personal data).

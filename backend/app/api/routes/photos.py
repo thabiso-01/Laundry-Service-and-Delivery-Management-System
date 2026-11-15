@@ -8,6 +8,8 @@ from fastapi import APIRouter, File, Form, HTTPException, Query, Request, Upload
 from fastapi.responses import Response
 
 from app.api.deps import CurrentUser, DbSession
+from app.config import settings
+from app.core.ratelimit import rate_limit
 from app.models import EvidencePhoto
 from app.models.enums import PhotoStage
 from app.schemas.incidents import PhotoOut
@@ -16,7 +18,9 @@ from app.services import photos
 router = APIRouter(prefix="/api/photos", tags=["photos"])
 
 
-@router.post("", response_model=PhotoOut, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=PhotoOut, status_code=status.HTTP_201_CREATED,
+             # Drivers photograph many handovers, so photos get their own, larger budget
+             dependencies=[rate_limit("photos", lambda: 2 * settings.ratelimit_reports_per_hour, 3600)])
 def upload_photo(
     user: CurrentUser,
     db: DbSession,

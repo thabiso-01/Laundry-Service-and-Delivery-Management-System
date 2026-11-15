@@ -11,6 +11,8 @@ from fastapi import APIRouter, HTTPException, Query, Request, status
 from sqlalchemy import func, select
 
 from app.api.deps import CurrentUser, DbSession
+from app.config import settings
+from app.core.ratelimit import rate_limit
 from app.models import Incident, IncidentUpdate, Order, User
 from app.models.enums import UserRole
 from app.schemas.incidents import (
@@ -68,7 +70,8 @@ def _not_admin(user: User) -> None:
                             "Administrators manage reports under /api/admin/incidents")
 
 
-@router.post("", response_model=IncidentOut, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=IncidentOut, status_code=status.HTTP_201_CREATED,
+             dependencies=[rate_limit("reports", lambda: settings.ratelimit_reports_per_hour, 3600)])
 def report_incident(body: IncidentIn, user: CurrentUser, db: DbSession,
                     request: Request) -> IncidentOut:
     """Report missing, damaged or wrong items, a broken seal, a security

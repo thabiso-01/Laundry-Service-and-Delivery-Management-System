@@ -18,6 +18,7 @@ from sqlalchemy.exc import IntegrityError
 from app.api.deps import CurrentUser, DbSession, UserPendingPasswordChange
 from app.config import settings
 from app.core import mfa
+from app.core.ratelimit import rate_limit
 from app.core.security import (
     DUMMY_HASH,
     create_access_token,
@@ -95,7 +96,8 @@ def _commit(db: DbSession) -> None:
         raise _conflict("An account with these details already exists")
 
 
-@router.post("/register/customer", response_model=UserOut, status_code=status.HTTP_201_CREATED)
+@router.post("/register/customer", response_model=UserOut, status_code=status.HTTP_201_CREATED,
+             dependencies=[rate_limit("register", lambda: settings.ratelimit_register_per_hour, 3600)])
 def register_customer(data: CustomerRegister, db: DbSession, request: Request) -> User:
     user = _new_user(db, data, UserRole.CUSTOMER)
     address = data.address.model_dump() if data.address else {}
@@ -107,7 +109,8 @@ def register_customer(data: CustomerRegister, db: DbSession, request: Request) -
     return user
 
 
-@router.post("/register/driver", response_model=UserOut, status_code=status.HTTP_201_CREATED)
+@router.post("/register/driver", response_model=UserOut, status_code=status.HTTP_201_CREATED,
+             dependencies=[rate_limit("register", lambda: settings.ratelimit_register_per_hour, 3600)])
 def register_driver(data: DriverRegister, db: DbSession, request: Request) -> User:
     if db.scalar(select(DriverProfile).where(DriverProfile.id_number == data.id_number)):
         raise _conflict("A driver with this ID number is already registered")
@@ -127,7 +130,8 @@ def register_driver(data: DriverRegister, db: DbSession, request: Request) -> Us
     return user
 
 
-@router.post("/register/business", response_model=UserOut, status_code=status.HTTP_201_CREATED)
+@router.post("/register/business", response_model=UserOut, status_code=status.HTTP_201_CREATED,
+             dependencies=[rate_limit("register", lambda: settings.ratelimit_register_per_hour, 3600)])
 def register_business(data: BusinessRegister, db: DbSession, request: Request) -> User:
     if data.registration_number and db.scalar(
         select(BusinessProfile).where(
@@ -222,7 +226,8 @@ def _complete_login(db: DbSession, user: User, request: Request) -> TokenOut:
                     must_change_password=user.must_change_password)
 
 
-@router.post("/login", response_model=TokenOut)
+@router.post("/login", response_model=TokenOut,
+             dependencies=[rate_limit("login-minute", lambda: settings.ratelimit_login_per_minute, 60), rate_limit("login-hour", lambda: settings.ratelimit_login_per_hour, 3600)])
 def login(
     form: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: DbSession,
@@ -288,7 +293,8 @@ def _check_second_factor(user: User, code: str) -> bool:
     return False
 
 
-@router.post("/login/mfa", response_model=TokenOut)
+@router.post("/login/mfa", response_model=TokenOut,
+             dependencies=[rate_limit("login-minute", lambda: settings.ratelimit_login_per_minute, 60), rate_limit("login-hour", lambda: settings.ratelimit_login_per_hour, 3600)])
 def login_mfa(body: MfaLoginIn, db: DbSession, request: Request) -> TokenOut:
     """Second step of login: the 6-digit code from the authenticator app, or a
     recovery code."""
@@ -365,7 +371,8 @@ def mfa_disable(body: MfaDisableIn, user: CurrentUser, db: DbSession, request: R
     return {"mfa_enabled": False}
 
 
-@router.post("/change-password", response_model=TokenOut)
+@router.post("/change-password", response_model=TokenOut,
+             dependencies=[rate_limit("password-change", lambda: settings.ratelimit_password_change_per_15_min, 900)])
 def change_password(
     body: ChangePasswordIn, user: UserPendingPasswordChange, db: DbSession, request: Request
 ) -> TokenOut:

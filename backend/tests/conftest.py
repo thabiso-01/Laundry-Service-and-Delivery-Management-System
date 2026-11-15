@@ -92,7 +92,13 @@ def no_real_geocoding(monkeypatch):
 
     monkeypatch.setattr(geocode, "_fetch", _blocked)
     geocode.cache.clear()
-    geocode.reset_limits()
+
+
+@pytest.fixture(autouse=True)
+def fresh_rate_limits():
+    """Every test starts with empty per-IP counters."""
+    from app.core.ratelimit import limiter
+    limiter.reset()
 
 
 @pytest.fixture(autouse=True)

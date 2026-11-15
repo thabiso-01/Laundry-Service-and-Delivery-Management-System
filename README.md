@@ -148,6 +148,15 @@ the security log. Deletion is refused while an order or delivery job is in
 progress, and laundry owners must hand over or close the business first. The
 privacy policy should state these retention periods.
 
+**Rate limits.** Login, registration, password changes, reports, photo uploads
+and address search are limited per IP address (429 + `Retry-After` when
+exceeded; the first block per window is audited). Limits are in
+`backend/app/config.py` (`RATELIMIT_*` settings). Behind a reverse proxy or load
+balancer, start the API with
+`uvicorn app.main:app --proxy-headers --forwarded-allow-ips=<proxy IP>` so the
+real visitor IP is used — otherwise every visitor looks like the proxy. Counts
+are kept in memory; with several API processes, move them to Redis.
+
 **Backups.** `python -m app.scripts.backup` makes an encrypted backup of the
 database and uploaded files and test-restores it automatically. Set it up to run
 daily and copy it off the server: see [docs/BACKUPS.md](docs/BACKUPS.md).
