@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
-import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { api } from "../../api/client";
 import type { LaundryDetail, Order, Quote } from "../../api/types";
 import { useAuth } from "../../auth/AuthContext";
 import { AddressPicker, EMPTY_ADDRESS, type AddressValue } from "../../components/AddressPicker";
 import { MapView } from "../../components/MapView";
-import { Alert, Button, Card, Empty, PageTitle, Select, Spinner, Stars, TextArea } from "../../components/ui";
+import { Icon } from "../../components/icons";
+import { Alert, Button, ButtonLink, Card, Empty, PageTitle, Select, Spinner, Stars, TextArea } from "../../components/ui";
 import { DEFAULT_LOCATION, UNIT_LABEL, label, rands, slots, when } from "../../lib/format";
 import { useAction, useAsync } from "../../lib/useAsync";
 
@@ -73,103 +74,134 @@ export function LaundryPage() {
       navigate(`/orders/${order.id}`);
     });
 
+  const setQuantity = (sid: string, n: number) => { setQuote(null); setQty({ ...qty, [sid]: Math.max(0, Math.min(100, n || 0)) }); };
+  const isCustomer = me?.role === "customer";
+
   return (
-    <div className="grid gap-4 lg:grid-cols-[1fr_380px]">
-      <div className="space-y-4">
-        <div>
-          <PageTitle sub={[l.address_line, l.suburb, l.city].filter(Boolean).join(", ")}>{l.business_name}</PageTitle>
-          <div className="-mt-2 flex flex-wrap items-center gap-3 text-sm text-slate-600">
+    <div>
+      <PageTitle back={{ to: `/search?lat=${lat}&lng=${lng}`, label: "All laundries" }}
+        sub={
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <span className="inline-flex items-center gap-1"><Icon name="pin" className="h-4 w-4" />{[l.address_line, l.suburb, l.city].filter(Boolean).join(", ")}</span>
             <Stars value={l.rating_avg} count={l.rating_count} />
             {l.distance_km != null && <span>{l.distance_km.toFixed(1)} km away</span>}
-            {l.contact_phone && <span>☎ {l.contact_phone}</span>}
+            {l.contact_phone && <a href={`tel:${l.contact_phone}`} className="inline-flex items-center gap-1 hover:text-slate-800"><Icon name="phone" className="h-4 w-4" />{l.contact_phone}</a>}
           </div>
-          {l.description && <p className="mt-3 text-slate-700">{l.description}</p>}
+        }>
+        {l.business_name}
+      </PageTitle>
+
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="min-w-0 space-y-5">
+          {l.description && <p className="text-slate-700">{l.description}</p>}
+
+          <div className="overflow-hidden rounded-xl border border-slate-200 shadow-card">
+            <MapView height={200} zoom={14} points={[{ latitude: l.latitude, longitude: l.longitude, label: l.business_name, color: "green" }]} />
+          </div>
+
+          <Card title={isCustomer ? "1. Choose your services" : "Services & prices"}
+            description={isCustomer ? "Set how much of each you need. Per-kg amounts are an estimate." : undefined} padded={false}>
+            <ul className="divide-y divide-slate-100">
+              {l.services.map((s) => {
+                const n = qty[s.id] ?? 0;
+                return (
+                  <li key={s.id} className={`flex flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-5 ${n > 0 ? "bg-brand-50/40" : ""}`}>
+                    <div className="min-w-0">
+                      <p className="font-medium text-slate-900">{s.name}</p>
+                      <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-slate-500">
+                        <span>{label(s.category)}</span><span>·</span>
+                        <span className="inline-flex items-center gap-1"><Icon name="clock" className="h-3 w-3" />ready in {s.turnaround_hours} h</span>
+                        {s.min_quantity > 1 && <><span>·</span><span>minimum {s.min_quantity} {UNIT_LABEL[s.pricing_unit]}</span></>}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm font-semibold text-slate-900">{s.price_display}</span>
+                      {isCustomer && (
+                        <div className="flex items-center rounded-lg shadow-sm ring-1 ring-slate-300 ring-inset">
+                          <button type="button" aria-label={`Less ${s.name}`} disabled={n === 0} onClick={() => setQuantity(s.id, n - 1)}
+                            className="grid h-9 w-9 place-items-center rounded-l-lg text-lg text-slate-600 hover:bg-slate-50 disabled:text-slate-300">−</button>
+                          <input type="number" min={0} max={100} aria-label={`Quantity of ${s.name}`} value={n}
+                            onChange={(e) => setQuantity(s.id, Number(e.target.value))}
+                            className="h-9 w-12 border-x border-slate-200 text-center text-sm font-medium tabular-nums outline-none [appearance:textfield] focus:bg-brand-50 [&::-webkit-inner-spin-button]:appearance-none" />
+                          <button type="button" aria-label={`More ${s.name}`} onClick={() => setQuantity(s.id, n + 1)}
+                            className="grid h-9 w-9 place-items-center rounded-r-lg text-lg text-slate-600 hover:bg-slate-50">+</button>
+                        </div>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+            {chosen.some((s) => s.pricing_unit === "per_kg") && (
+              <p className="border-t border-slate-100 px-4 py-3 text-xs text-slate-500 sm:px-5">
+                Per-kg prices are estimates: the laundry weighs your load and you pay or are refunded the difference.
+              </p>
+            )}
+          </Card>
+
+          <Card title="Reviews">
+            {reviews.data?.length ? (
+              <ul className="divide-y divide-slate-100">
+                {reviews.data.map((r) => (
+                  <li key={r.id} className="py-3 text-sm first:pt-0 last:pb-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Stars value={r.rating} /> <span className="text-slate-500">{r.reviewer} · {when(r.created_at)}</span>
+                    </div>
+                    {r.comment && <p className="mt-1 text-slate-700">{r.comment}</p>}
+                  </li>
+                ))}
+              </ul>
+            ) : <Empty icon="star">No reviews yet.</Empty>}
+          </Card>
         </div>
 
-        <MapView height={200} zoom={14} points={[{ latitude: l.latitude, longitude: l.longitude, label: l.business_name, color: "green" }]} />
-
-        <Card title="Services">
-          <ul className="divide-y divide-slate-100">
-            {l.services.map((s) => (
-              <li key={s.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
-                <div className="min-w-0">
-                  <p className="font-medium text-slate-900">{s.name}</p>
-                  <p className="text-xs text-slate-500">
-                    {label(s.category)} · ready in {s.turnaround_hours} h
-                    {s.min_quantity > 1 && ` · minimum ${s.min_quantity} ${UNIT_LABEL[s.pricing_unit]}`}
-                  </p>
+        <aside>
+          <div className="lg:sticky lg:top-24">
+            <Card title={isCustomer ? "2. Book a collection" : "Book a collection"}>
+              {!me ? (
+                <div className="space-y-3 text-center">
+                  <p className="text-sm text-slate-600">Log in or create a free account to order from {l.business_name}.</p>
+                  <ButtonLink to="/login" className="w-full">Log in to order</ButtonLink>
+                  <ButtonLink to="/register" variant="secondary" className="w-full">Create an account</ButtonLink>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm text-slate-700">{s.price_display}</span>
-                  {me?.role === "customer" && (
-                    <input type="number" min={0} max={100} aria-label={`Quantity of ${s.name}`}
-                      className="w-20 rounded-lg border border-slate-300 px-2 py-1 text-sm"
-                      value={qty[s.id] ?? 0}
-                      onChange={(e) => { setQuote(null); setQty({ ...qty, [s.id]: Math.max(0, Number(e.target.value)) }); }} />
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
-          {chosen.some((s) => s.pricing_unit === "per_kg") && (
-            <p className="mt-2 text-xs text-slate-500">Per-kg prices are estimates: the laundry weighs your load and you pay or are refunded the difference.</p>
-          )}
-        </Card>
-
-        <Card title="Reviews">
-          {reviews.data?.length ? (
-            <ul className="space-y-3">
-              {reviews.data.map((r) => (
-                <li key={r.id} className="text-sm">
-                  <Stars value={r.rating} /> <span className="text-slate-500">— {r.reviewer}, {when(r.created_at)}</span>
-                  {r.comment && <p className="mt-1 text-slate-700">{r.comment}</p>}
-                </li>
-              ))}
-            </ul>
-          ) : <Empty>No reviews yet.</Empty>}
-        </Card>
-      </div>
-
-      <aside>
-        <Card title="Book a collection" className="lg:sticky lg:top-20">
-          {!me ? (
-            <p className="text-sm text-slate-600"><Link to="/login" className="text-sky-700 underline">Log in</Link> or{" "}
-              <Link to="/register" className="text-sky-700 underline">create an account</Link> to order.</p>
-          ) : me.role !== "customer" ? (
-            <p className="text-sm text-slate-600">Only customer accounts can place orders.</p>
-          ) : (
-            <div className="space-y-3">
-              {chosen.length === 0 && <Alert kind="info">Choose how much of each service you need.</Alert>}
-              <AddressPicker label="Collection address" required value={addr}
-                onChange={(next) => { setQuote(null); setAddr(next); }} />
-              <Select label="Collection time" value={collection}
-                onChange={(e) => { setQuote(null); setCollection(e.target.value); }}
-                options={allSlots.map((s) => ({ value: s.start, label: s.label }))} />
-              <Select label="Delivery time" value={deliveryChoice} disabled={!deliverySlots.length}
-                onChange={(e) => { setQuote(null); setDelivery(e.target.value); }}
-                hint={slowest ? `Earliest is ${slowest} h after collection (slowest service).` : undefined}
-                options={deliverySlots.length ? deliverySlots.map((s) => ({ value: s.start, label: s.label }))
-                  : [{ value: "", label: "Choose services first" }]} />
-              <TextArea label="Notes for the driver" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Gate code, where to wait…" />
-              <Alert>{quoting.error || placing.error}</Alert>
-              {quote && (
-                <div className="rounded-lg bg-slate-50 p-3 text-sm">
-                  {quote.items.map((i) => (
-                    <div key={i.service_id} className="flex justify-between"><span>{i.service_name} <span className="text-slate-500">({i.description})</span></span><span>{rands(i.line_total_cents)}</span></div>
-                  ))}
-                  <div className="flex justify-between text-slate-600"><span>Collection & delivery ({quote.distance_km.toFixed(1)} km)</span><span>{rands(quote.delivery_fee_cents)}</span></div>
-                  <div className="mt-1 flex justify-between border-t border-slate-200 pt-1 font-semibold"><span>Total</span><span>{quote.total_display}</span></div>
-                </div>
-              )}
-              {quote ? (
-                <Button className="w-full" busy={placing.busy} onClick={place}>Place order</Button>
+              ) : !isCustomer ? (
+                <p className="text-sm text-slate-600">Only customer accounts can place orders.</p>
               ) : (
-                <Button className="w-full" busy={quoting.busy} disabled={!ready} onClick={getQuote}>See price</Button>
+                <div className="space-y-4">
+                  {chosen.length === 0 && <Alert kind="info">Start by choosing how much of each service you need.</Alert>}
+                  <AddressPicker label="Collection address" required value={addr}
+                    onChange={(next) => { setQuote(null); setAddr(next); }} />
+                  <Select label="Collection time" value={collection}
+                    onChange={(e) => { setQuote(null); setCollection(e.target.value); }}
+                    options={allSlots.map((s) => ({ value: s.start, label: s.label }))} />
+                  <Select label="Delivery time" value={deliveryChoice} disabled={!deliverySlots.length}
+                    onChange={(e) => { setQuote(null); setDelivery(e.target.value); }}
+                    hint={slowest ? `Earliest is ${slowest} h after collection (slowest service).` : undefined}
+                    options={deliverySlots.length ? deliverySlots.map((s) => ({ value: s.start, label: s.label }))
+                      : [{ value: "", label: "Choose services first" }]} />
+                  <TextArea label="Notes for the driver" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Gate code, where to wait…" />
+                  <Alert>{quoting.error || placing.error}</Alert>
+                  {quote && (
+                    <div className="space-y-1.5 rounded-lg bg-slate-50 p-4 text-sm ring-1 ring-slate-200 ring-inset">
+                      {quote.items.map((i) => (
+                        <div key={i.service_id} className="flex justify-between gap-2"><span>{i.service_name} <span className="text-slate-500">({i.description})</span></span><span className="tabular-nums">{rands(i.line_total_cents)}</span></div>
+                      ))}
+                      <div className="flex justify-between gap-2 text-slate-600"><span>Collection & delivery ({quote.distance_km.toFixed(1)} km)</span><span className="tabular-nums">{rands(quote.delivery_fee_cents)}</span></div>
+                      <div className="mt-2 flex justify-between border-t border-slate-200 pt-2 text-base font-semibold"><span>Total</span><span className="tabular-nums">{quote.total_display}</span></div>
+                    </div>
+                  )}
+                  {quote ? (
+                    <Button size="lg" className="w-full" busy={placing.busy} onClick={place}>Place order</Button>
+                  ) : (
+                    <Button size="lg" variant={ready ? "primary" : "secondary"} className="w-full" busy={quoting.busy} disabled={!ready} onClick={getQuote}>See price</Button>
+                  )}
+                  {quote && <p className="text-center text-xs text-slate-500">You'll pay on the next screen.</p>}
+                </div>
               )}
-            </div>
-          )}
-        </Card>
-      </aside>
+            </Card>
+          </div>
+        </aside>
+      </div>
     </div>
   );
 }

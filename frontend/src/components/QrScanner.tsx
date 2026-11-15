@@ -7,7 +7,8 @@
 // (a poster, another app) is ignored.
 
 import { useEffect, useRef, useState } from "react";
-import { Button, Input } from "./ui";
+import { Icon } from "./icons";
+import { Button } from "./ui";
 
 export const BAG_CODE = /^LCQ1\.[A-Z0-9.-]+$/i;
 
@@ -154,8 +155,8 @@ export function QrScanner({ onResult, onClose }: { onResult: (code: string) => v
         {error && <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">{error}</p>}
         {hint && !error && <p className="mt-2 text-sm text-amber-700">{hint}</p>}
         {!error && !hint && <p className="mt-2 text-sm text-slate-600">Hold the QR code inside the square.</p>}
-        <label className="mt-3 block cursor-pointer rounded-lg border border-dashed border-slate-300 p-3 text-center text-sm text-sky-700 hover:bg-sky-50">
-          📷 Take a photo of the label instead
+        <label className="mt-3 block cursor-pointer rounded-lg border border-dashed border-slate-300 p-3 text-center text-sm text-brand-700 hover:bg-brand-50">
+          <span className="inline-flex items-center gap-2"><Icon name="camera" className="h-4 w-4" /> Take a photo of the label instead</span>
           <input type="file" accept="image/*" capture="environment" className="hidden" onChange={async (e) => {
             const file = e.target.files?.[0];
             if (!file) return;
@@ -180,14 +181,17 @@ export function BagCodeField({ value, onChange, label = "Bag label code" }: {
   const valid = !value || BAG_CODE.test(value.trim());
   return (
     <div>
-      <div className="flex items-end gap-2">
-        <div className="flex-1">
-          <Input label={label} value={value} onChange={(e) => onChange(e.target.value)} placeholder="LCQ1.LC-…"
-            hint={valid ? "Scan the QR on the bag, or type the code printed under it." : "That doesn't look like a LaundryConnect bag code."} />
-        </div>
-        <Button type="button" variant="secondary" className="mb-5" onClick={() => setScanning(true)}>📷 Scan</Button>
+      <label className="mb-1.5 block text-sm font-medium text-slate-700" htmlFor="bag-code">{label}</label>
+      <div className="flex gap-2">
+        <input id="bag-code" value={value} onChange={(e) => onChange(e.target.value)} placeholder="LCQ1.LC-…" autoComplete="off"
+          className="block h-10 min-w-0 flex-1 rounded-lg border-0 bg-white px-3 font-mono text-sm shadow-sm ring-1 ring-inset ring-slate-300 outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-brand-600" />
+        <Button type="button" icon="camera" onClick={() => setScanning(true)}>Scan</Button>
       </div>
-      {value && valid && <p className="-mt-3 mb-1 text-xs text-emerald-700">✔ Code captured</p>}
+      {value && valid
+        ? <p className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-emerald-700"><Icon name="checkCircle" className="h-3.5 w-3.5" /> Code captured</p>
+        : <p className={`mt-1.5 text-xs ${valid ? "text-slate-500" : "text-rose-700"}`}>
+            {valid ? "Scan the QR on the bag, or type the code printed under it." : "That doesn't look like a LaundryConnect bag code."}
+          </p>}
       {scanning && <QrScanner onClose={() => setScanning(false)} onResult={(code) => { onChange(code); setScanning(false); }} />}
     </div>
   );

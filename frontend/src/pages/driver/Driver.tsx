@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "../../api/client";
-import type { DriverJob, JobBoardItem } from "../../api/types";
+import type { DriverJob, JobBoardItem, Stop } from "../../api/types";
 import { useAuth } from "../../auth/AuthContext";
-import { Alert, Badge, Button, Card, Checkbox, Empty, Input, KeyValue, PageTitle, Spinner, Stars, StatusBadge } from "../../components/ui";
-import type { Stop } from "../../api/types";
-import { BagCodeField } from "../../components/QrScanner";
+import { Icon } from "../../components/icons";
 import { MapView } from "../../components/MapView";
+import { BagCodeField } from "../../components/QrScanner";
+import { Alert, Badge, Button, Card, Checkbox, Empty, Input, KeyValue, ListRow, PageTitle, Spinner, Stars, StatusBadge } from "../../components/ui";
 import { DEFAULT_LOCATION, currentPosition, osmLink, rands, windowText } from "../../lib/format";
 import { useAction, useAsync } from "../../lib/useAsync";
 
@@ -19,6 +19,10 @@ function useDriverPosition() {
     currentPosition().then((p) => { setPos(p); setKnown(true); }).catch(() => undefined);
   }, []);
   return { pos, known };
+}
+
+function KindBadge({ kind }: { kind: string }) {
+  return <Badge color={kind === "collection" ? "blue" : "purple"}>{kind === "collection" ? "Collection" : "Delivery"}</Badge>;
 }
 
 // UR-009: see and accept jobs. SEC-004: the API only lets approved drivers in.
@@ -38,13 +42,14 @@ export function DriverHome() {
 
   if (!me?.driver) return <Spinner />;
   if (!approved) {
+    const rejected = me.driver.verification_status === "rejected";
     return (
       <div className="max-w-xl">
-        <PageTitle>Driver</PageTitle>
-        <Alert kind={me.driver.verification_status === "rejected" ? "error" : "warning"}>
-          {me.driver.verification_status === "rejected"
-            ? <>Your application wasn't approved: {me.driver.rejection_reason}</>
-            : <>Your account is waiting for approval. Make sure all your <Link to="/documents" className="underline">documents</Link> are uploaded.</>}
+        <PageTitle>Jobs</PageTitle>
+        <Alert kind={rejected ? "error" : "warning"} title={rejected ? "Application not approved" : "Waiting for approval"}>
+          {rejected
+            ? <>{me.driver.rejection_reason}</>
+            : <>We check every driver before they can take jobs. Make sure all your <Link to="/documents" className="font-medium underline">documents</Link> are uploaded.</>}
         </Alert>
       </div>
     );
@@ -56,68 +61,86 @@ export function DriverHome() {
   });
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <PageTitle sub={<Stars value={ratings.data?.rating_avg ?? null} count={ratings.data?.rating_count} />}>Jobs</PageTitle>
-        <Button variant={online ? "secondary" : "primary"} busy={busy} onClick={toggle}>{online ? "Go offline" : "Go online"}</Button>
-      </div>
-      <Alert>{error}</Alert>
+    <div>
+      <PageTitle sub={<Stars value={ratings.data?.rating_avg ?? null} count={ratings.data?.rating_count} />}>Jobs</PageTitle>
 
-      <Card title="My active jobs">
-        {mine.loading ? <Spinner /> : !mine.data?.length ? <Empty>No active jobs.</Empty> : (
-          <ul className="divide-y divide-slate-100">
-            {mine.data.map((j) => (
-              <li key={j.id}>
-                <Link to={`/driver/jobs/${j.id}`} className="flex flex-wrap items-center justify-between gap-2 py-3">
-                  <div>
-                    <p className="font-medium"><Badge color="blue">{j.kind}</Badge> {j.pickup.area} → {j.dropoff.area}</p>
-                    <p className="text-sm text-slate-500">{windowText(j.window_start, j.window_end)} · {j.next_step}</p>
+      {/* Online / offline */}
+      <section className={`mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border p-5 shadow-card ${online ? "border-emerald-200 bg-emerald-50/60" : "border-slate-200 bg-white"}`}>
+        <div className="flex items-center gap-3">
+          <span className={`grid h-11 w-11 place-items-center rounded-full ${online ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>
+            <Icon name="power" />
+          </span>
+          <div>
+            <p className="font-semibold text-slate-900">{online ? "You're online" : "You're offline"}</p>
+            <p className="text-sm text-slate-600">{online ? "New jobs near you appear below." : "Go online to see and accept jobs."}</p>
+          </div>
+        </div>
+        <Button variant={online ? "secondary" : "primary"} size="lg" busy={busy} onClick={toggle}>{online ? "Go offline" : "Go online"}</Button>
+      </section>
+      <div className="mb-4 empty:hidden"><Alert>{error}</Alert></div>
+
+      <div className="space-y-6">
+        <Card title="My active jobs" padded={false}>
+          {mine.loading ? <Spinner /> : !mine.data?.length ? <Empty icon="truck">No active jobs. Accept one below.</Empty> : (
+            <ul className="divide-y divide-slate-100">
+              {mine.data.map((j) => (
+                <li key={j.id}>
+                  <ListRow to={`/driver/jobs/${j.id}`}>
+                    <div className="min-w-0">
+                      <p className="flex flex-wrap items-center gap-2 font-medium text-slate-900"><KindBadge kind={j.kind} /> {j.pickup.area} <Icon name="arrowRight" className="h-3.5 w-3.5 text-slate-400" /> {j.dropoff.area}</p>
+                      <p className="mt-0.5 text-sm text-slate-500">{windowText(j.window_start, j.window_end)} · <span className="font-medium text-brand-700">{j.next_step}</span></p>
+                    </div>
+                    <StatusBadge status={j.status} />
+                  </ListRow>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
+
+        <Card title="Available near you" padded={false}
+          actions={!known && <span className="text-xs text-slate-500">Location off: showing jobs near Johannesburg CBD</span>}>
+          {!online ? <Empty icon="power">Go online to see jobs.</Empty> : board.loading ? <Spinner /> : board.error ? <div className="p-4"><Alert>{board.error}</Alert></div> : !board.data?.length ? <Empty icon="inbox">No open jobs nearby right now.</Empty> : (
+            <ul className="divide-y divide-slate-100">
+              {board.data.map((j) => (
+                <li key={j.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-5">
+                  <div className="min-w-0">
+                    <p className="flex flex-wrap items-center gap-2 font-medium text-slate-900"><KindBadge kind={j.kind} /> {j.pickup_area} <Icon name="arrowRight" className="h-3.5 w-3.5 text-slate-400" /> {j.dropoff_area}</p>
+                    <p className="mt-1 flex flex-wrap gap-x-3 text-sm text-slate-500">
+                      <span className="inline-flex items-center gap-1"><Icon name="clock" className="h-3.5 w-3.5" />{windowText(j.window_start, j.window_end)}</span>
+                      <span className="inline-flex items-center gap-1"><Icon name="pin" className="h-3.5 w-3.5" />{j.distance_to_pickup_km.toFixed(1)} km to pickup</span>
+                      <span className="inline-flex items-center gap-1"><Icon name="route" className="h-3.5 w-3.5" />trip {j.trip_km.toFixed(1)} km</span>
+                    </p>
                   </div>
-                  <StatusBadge status={j.status} />
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
-
-      <Card title="Available near you" actions={!known && <span className="text-xs text-slate-500">Location off: showing jobs near Johannesburg CBD</span>}>
-        {!online ? <Empty>Go online to see jobs.</Empty> : board.loading ? <Spinner /> : board.error ? <Alert>{board.error}</Alert> : !board.data?.length ? <Empty>No open jobs nearby right now.</Empty> : (
-          <ul className="divide-y divide-slate-100">
-            {board.data.map((j) => (
-              <li key={j.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
-                <div>
-                  <p className="font-medium"><Badge color="blue">{j.kind}</Badge> {j.pickup_area} → {j.dropoff_area}</p>
-                  <p className="text-sm text-slate-500">
-                    {windowText(j.window_start, j.window_end)} · {j.distance_to_pickup_km.toFixed(1)} km to pickup · trip {j.trip_km.toFixed(1)} km
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="font-semibold text-emerald-700">{j.fee_display}</span>
-                  <Button busy={busy} onClick={() => void run(async () => { await api(`/api/driver/jobs/${j.id}/accept`, { method: "POST" }); navigate(`/driver/jobs/${j.id}`); })}>Accept</Button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
+                  <div className="flex items-center gap-4">
+                    <span className="text-lg font-semibold text-emerald-700">{j.fee_display}</span>
+                    <Button busy={busy} onClick={() => void run(async () => { await api(`/api/driver/jobs/${j.id}/accept`, { method: "POST" }); navigate(`/driver/jobs/${j.id}`); })}>Accept</Button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
+      </div>
     </div>
   );
 }
 
-function StopCard({ title, stop }: { title: string; stop: Stop }) {
+function StopCard({ title, stop, tone }: { title: string; stop: Stop; tone: "blue" | "green" }) {
   return (
-    <Card title={title}>
+    <Card title={<span className="inline-flex items-center gap-2"><span className={`h-2.5 w-2.5 rounded-full ${tone === "blue" ? "bg-brand-600" : "bg-emerald-600"}`} />{title}</span>}
+      actions={stop.latitude != null && stop.longitude != null && (
+        <a href={osmLink(stop.latitude, stop.longitude)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm font-medium text-brand-700 hover:underline">
+          <Icon name="navigation" className="h-3.5 w-3.5" /> Map
+        </a>
+      )}>
       <KeyValue items={[
         ["Name", stop.name],
         ["Area", stop.area],
         ["Address", stop.address_line],
-        ["Phone", stop.phone && <a href={`tel:${stop.phone}`} className="text-sky-700 underline">{stop.phone}</a>],
+        ["Phone", stop.phone && <a href={`tel:${stop.phone}`} className="text-brand-700 hover:underline">{stop.phone}</a>],
         ["Notes", stop.notes],
       ]} />
-      {stop.latitude != null && stop.longitude != null && (
-        <a href={osmLink(stop.latitude, stop.longitude)} target="_blank" rel="noreferrer" className="mt-2 inline-block text-sm text-sky-700 underline">Open in map</a>
-      )}
     </Card>
   );
 }
@@ -139,6 +162,26 @@ function useLocationSharing(jobId: string, active: boolean) {
   return last;
 }
 
+// The three steps of a job, so the driver always sees where they are
+function JobSteps({ job }: { job: DriverJob }) {
+  const steps = job.kind === "collection"
+    ? ["Accepted", "Collected from customer", "Delivered to laundry"]
+    : ["Accepted", "Picked up at laundry", "Delivered to customer"];
+  const at = job.status === "assigned" ? 1 : job.status === "picked_up" ? 2 : job.status === "completed" ? 3 : 0;
+  return (
+    <ol className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+      {steps.map((s, i) => (
+        <li key={s} className="flex items-center gap-2">
+          <span className={`grid h-6 w-6 place-items-center rounded-full text-xs font-semibold ${i < at ? "bg-brand-600 text-white" : i === at ? "bg-white text-brand-700 ring-2 ring-brand-600" : "bg-slate-100 text-slate-400"}`}>
+            {i < at ? <Icon name="check" className="h-3.5 w-3.5" /> : i + 1}
+          </span>
+          <span className={i <= at ? "font-medium text-slate-900" : "text-slate-400"}>{s}</span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
 export function DriverJobPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -156,75 +199,85 @@ export function DriverJobPage() {
   if (error || !job) return <Alert>{error}</Alert>;
 
   const handover = (path: string, body: Record<string, unknown>) => void run(async () => {
-    // Clear the previous step's "Done" straight away, so it can't be mistaken
+    // Clear the previous step's message straight away, so it can't be mistaken
     // for this step's result while the request is still running (or if it fails)
     setMessage(null);
     const pos = await currentPosition().catch(() => DEFAULT_LOCATION);
     const out = await api<{ incident_reference?: string | null; location_flagged: boolean }>(`/api/driver/jobs/${job.id}/${path}`, { json: { ...body, ...pos } });
-    setMessage(out.incident_reference ? `Done. A seal problem was recorded as ${out.incident_reference}.` : "Done ✔");
+    setMessage(out.incident_reference ? `Step confirmed. A seal problem was recorded as ${out.incident_reference}.` : "Step confirmed.");
     setOtp(""); setCode(""); setSeals("");
     await reload();
   });
   const sealList = seals.split(/[\s,]+/).filter(Boolean);
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-bold">{job.kind === "collection" ? "Collection" : "Delivery"} · <span className="font-mono">{job.order_number}</span></h1>
-        <StatusBadge status={job.status} />
-        <span className="font-semibold text-emerald-700">{rands(job.driver_fee_cents)}</span>
+    <div>
+      <PageTitle back={{ to: "/driver", label: "Jobs" }}
+        sub={<span className="flex flex-wrap items-center gap-x-2">{windowText(job.window_start, job.window_end)} · {job.item_count} item line(s)
+          {active && <span className="inline-flex items-center gap-1.5 text-emerald-700"><span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />Sharing location{lastPing && ` (last sent ${lastPing})`}</span>}
+        </span>}
+        actions={<><span className="text-lg font-semibold text-emerald-700">{rands(job.driver_fee_cents)}</span><StatusBadge status={job.status} /></>}>
+        {job.kind === "collection" ? "Collection" : "Delivery"} · <span className="font-mono">{job.order_number}</span>
+      </PageTitle>
+
+      <div className="space-y-5">
+        <Card><JobSteps job={job} /></Card>
+
+        {message && <Alert kind="success">{message}</Alert>}
+        <Alert>{actionError}</Alert>
+
+        {job.next_step && (
+          <Card title={job.next_step} className="ring-2 ring-brand-100">
+            {job.kind === "collection" && job.status === "assigned" && (
+              <div className="space-y-4">
+                <Input label="Seal number(s) you put on the bag" value={seals} onChange={(e) => setSeals(e.target.value)} placeholder="S1234" hint="Seal the bag in front of the customer first." />
+                <Input label="Customer's collection code" inputMode="numeric" maxLength={6} value={otp} onChange={(e) => setOtp(e.target.value)}
+                  className="font-mono text-lg tracking-[0.3em]" hint="The customer reads it from their phone. Never accept it over the phone." />
+                <Button size="lg" className="w-full sm:w-auto" busy={busy} disabled={otp.length !== 6 || !sealList.length} onClick={() => handover("collect", { otp, seal_numbers: sealList })}>Confirm collection</Button>
+              </div>
+            )}
+            {job.kind === "collection" && job.status === "picked_up" && <p className="text-sm text-slate-600">Take the bag to the laundry. Staff will scan its label and check the seals.</p>}
+            {job.kind === "delivery" && job.status === "assigned" && (
+              <div className="space-y-4">
+                <BagCodeField value={code} onChange={setCode} />
+                <Input label="Seal number(s) on the clean bag" value={seals} onChange={(e) => setSeals(e.target.value)} />
+                <Button size="lg" className="w-full sm:w-auto" busy={busy} disabled={!code || !sealList.length} onClick={() => handover("pickup", { code, seal_numbers: sealList })}>Confirm pickup</Button>
+              </div>
+            )}
+            {job.kind === "delivery" && job.status === "picked_up" && (
+              <div className="space-y-4">
+                <Checkbox checked={intact} onChange={(e) => setIntact(e.target.checked)} label="The customer checked the seals and they are intact" />
+                <Input label="Customer's delivery code" inputMode="numeric" maxLength={6} value={otp} onChange={(e) => setOtp(e.target.value)}
+                  className="font-mono text-lg tracking-[0.3em]" />
+                <Button size="lg" className="w-full sm:w-auto" busy={busy} disabled={otp.length !== 6} onClick={() => handover("deliver", { otp, seals_intact: intact })}>Confirm delivery</Button>
+              </div>
+            )}
+          </Card>
+        )}
+
+        {job.pickup.latitude != null && job.dropoff.latitude != null && (
+          <div className="overflow-hidden rounded-xl border border-slate-200 shadow-card">
+            <MapView height={260} points={[
+              { latitude: job.pickup.latitude, longitude: job.pickup.longitude!, label: `Pick up: ${job.pickup.name}`, color: "blue" },
+              { latitude: job.dropoff.latitude, longitude: job.dropoff.longitude!, label: `Drop off: ${job.dropoff.name}`, color: "green" },
+            ]} line={[[job.pickup.latitude, job.pickup.longitude!], [job.dropoff.latitude, job.dropoff.longitude!]]} />
+          </div>
+        )}
+
+        <div className="grid gap-5 md:grid-cols-2">
+          <StopCard title="Pick up from" stop={job.pickup} tone="blue" />
+          <StopCard title="Drop off at" stop={job.dropoff} tone="green" />
+        </div>
+
+        {job.status === "assigned" && (
+          <div className="flex justify-end">
+            <Button variant="ghost" className="text-rose-700 hover:bg-rose-50" busy={busy} onClick={() => {
+              const reason = prompt("Why can't you do this job?");
+              if (reason && reason.length >= 3) void run(async () => { await api(`/api/driver/jobs/${job.id}/release`, { json: { reason } }); navigate("/driver"); });
+            }}>Give this job back</Button>
+          </div>
+        )}
       </div>
-      <p className="text-sm text-slate-600">{windowText(job.window_start, job.window_end)} · {job.item_count} item line(s)
-        {active && <> · 📍 sharing location{lastPing && ` (last sent ${lastPing})`}</>}</p>
-
-      {message && <Alert kind="success">{message}</Alert>}
-      <Alert>{actionError}</Alert>
-
-      {job.next_step && (
-        <Card title={job.next_step}>
-          {job.kind === "collection" && job.status === "assigned" && (
-            <div className="space-y-3">
-              <Input label="Seal number(s) you put on the bag" value={seals} onChange={(e) => setSeals(e.target.value)} placeholder="S1234" hint="Seal the bag in front of the customer first." />
-              <Input label="Customer's collection code" inputMode="numeric" maxLength={6} value={otp} onChange={(e) => setOtp(e.target.value)} />
-              <Button busy={busy} disabled={otp.length !== 6 || !sealList.length} onClick={() => handover("collect", { otp, seal_numbers: sealList })}>Confirm collection</Button>
-            </div>
-          )}
-          {job.kind === "collection" && job.status === "picked_up" && <p className="text-sm text-slate-600">Take the bag to the laundry. Staff will scan its label and check the seals.</p>}
-          {job.kind === "delivery" && job.status === "assigned" && (
-            <div className="space-y-3">
-              <BagCodeField value={code} onChange={setCode} />
-              <Input label="Seal number(s) on the clean bag" value={seals} onChange={(e) => setSeals(e.target.value)} />
-              <Button busy={busy} disabled={!code || !sealList.length} onClick={() => handover("pickup", { code, seal_numbers: sealList })}>Confirm pickup</Button>
-            </div>
-          )}
-          {job.kind === "delivery" && job.status === "picked_up" && (
-            <div className="space-y-3">
-              <Checkbox checked={intact} onChange={(e) => setIntact(e.target.checked)} label="The customer checked the seals and they are intact" />
-              <Input label="Customer's delivery code" inputMode="numeric" maxLength={6} value={otp} onChange={(e) => setOtp(e.target.value)} />
-              <Button busy={busy} disabled={otp.length !== 6} onClick={() => handover("deliver", { otp, seals_intact: intact })}>Confirm delivery</Button>
-            </div>
-          )}
-        </Card>
-      )}
-
-      {job.pickup.latitude != null && job.dropoff.latitude != null && (
-        <MapView height={260} points={[
-          { latitude: job.pickup.latitude, longitude: job.pickup.longitude!, label: `Pick up: ${job.pickup.name}`, color: "blue" },
-          { latitude: job.dropoff.latitude, longitude: job.dropoff.longitude!, label: `Drop off: ${job.dropoff.name}`, color: "green" },
-        ]} line={[[job.pickup.latitude, job.pickup.longitude!], [job.dropoff.latitude, job.dropoff.longitude!]]} />
-      )}
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <StopCard title="Pick up from" stop={job.pickup} />
-        <StopCard title="Drop off at" stop={job.dropoff} />
-      </div>
-
-      {job.status === "assigned" && (
-        <Button variant="secondary" busy={busy} onClick={() => {
-          const reason = prompt("Why can't you do this job?");
-          if (reason && reason.length >= 3) void run(async () => { await api(`/api/driver/jobs/${job.id}/release`, { json: { reason } }); navigate("/driver"); });
-        }}>Give this job back</Button>
-      )}
     </div>
   );
 }

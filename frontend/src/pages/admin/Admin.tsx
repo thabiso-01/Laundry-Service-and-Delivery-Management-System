@@ -4,7 +4,9 @@ import { api, apiBlobUrl } from "../../api/client";
 import type { AdminIncident, DocumentsOverview, IncidentSummary, Page } from "../../api/types";
 import { MapView } from "../../components/MapView";
 import { AuthImage, Seals, Timeline } from "../../components/order";
-import { Alert, Badge, Button, Card, Checkbox, Empty, KeyValue, PageTitle, Select, Spinner, StatusBadge, TextArea } from "../../components/ui";
+import { Alert, Badge, Button, Card, Checkbox, Empty, KeyValue, ListRow, PageTitle, Select, Spinner, Stat, StatusBadge, Tabs, TextArea } from "../../components/ui";
+
+const STATUSES = ["pending", "approved", "rejected"];
 import { label, osmLink, when } from "../../lib/format";
 import { useAction, useAsync } from "../../lib/useAsync";
 
@@ -22,36 +24,52 @@ export function Verification() {
   const businesses = useAsync(() => api<Page<BusinessReview>>(`/api/admin/businesses?status=${status}`), [status]);
   const docs = useAsync(() => api<Page<{ id: string }>>("/api/admin/documents?limit=1"));
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <PageTitle sub={`${docs.data?.total ?? "…"} document(s) waiting for review`}>Verification</PageTitle>
-        <div className="w-48"><Select value={status} onChange={(e) => setStatus(e.target.value)}
-          options={["pending", "approved", "rejected"].map((s) => ({ value: s, label: label(s) }))} /></div>
+    <div>
+      <PageTitle sub="Check drivers and laundries before they can work on the platform.">Verification</PageTitle>
+      <div className="mb-6 grid gap-3 sm:grid-cols-3">
+        <Stat label="Documents to review" value={docs.data?.total ?? "–"} icon="file" tone="amber" />
+        <Stat label={`${label(status)} drivers`} value={drivers.data?.total ?? "–"} icon="truck" tone="brand" />
+        <Stat label={`${label(status)} laundries`} value={businesses.data?.total ?? "–"} icon="store" tone="violet" />
       </div>
-      <Card title={`Drivers (${drivers.data?.total ?? "…"})`}>
-        {drivers.loading ? <Spinner /> : !drivers.data?.items.length ? <Empty>None.</Empty> : (
-          <ul className="divide-y divide-slate-100">
-            {drivers.data.items.map((d) => (
-              <li key={d.user_id}><Link to={`/admin/drivers/${d.user_id}`} className="flex flex-wrap justify-between gap-2 py-2 text-sm">
-                <span><b>{d.full_name}</b> · {d.email} · {d.vehicle_type ?? "no vehicle"}</span>
-                <span className="text-slate-500">registered {when(d.registered_at)}</span>
-              </Link></li>
-            ))}
-          </ul>
-        )}
-      </Card>
-      <Card title={`Laundries (${businesses.data?.total ?? "…"})`}>
-        {businesses.loading ? <Spinner /> : !businesses.data?.items.length ? <Empty>None.</Empty> : (
-          <ul className="divide-y divide-slate-100">
-            {businesses.data.items.map((b) => (
-              <li key={b.id}><Link to={`/admin/businesses/${b.id}`} className="flex flex-wrap justify-between gap-2 py-2 text-sm">
-                <span><b>{b.business_name}</b> · {b.owner_name} · {b.city}</span>
-                <span className="text-slate-500">registered {when(b.registered_at)}</span>
-              </Link></li>
-            ))}
-          </ul>
-        )}
-      </Card>
+      <div className="mb-4">
+        <Tabs value={STATUSES.indexOf(status)} onChange={(i) => setStatus(STATUSES[i])} items={STATUSES.map((s) => ({ label: label(s) }))} />
+      </div>
+      <div className="grid gap-5 lg:grid-cols-2">
+        <Card title="Drivers" padded={false}>
+          {drivers.loading ? <Spinner /> : !drivers.data?.items.length ? <Empty icon="truck">No {status} drivers.</Empty> : (
+            <ul className="divide-y divide-slate-100">
+              {drivers.data.items.map((d) => (
+                <li key={d.user_id}>
+                  <ListRow to={`/admin/drivers/${d.user_id}`}>
+                    <div className="min-w-0">
+                      <p className="font-medium text-slate-900">{d.full_name}</p>
+                      <p className="truncate text-sm text-slate-500">{d.email} · {d.vehicle_type ?? "no vehicle"}</p>
+                    </div>
+                    <span className="text-xs text-slate-500">{when(d.registered_at)}</span>
+                  </ListRow>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
+        <Card title="Laundries" padded={false}>
+          {businesses.loading ? <Spinner /> : !businesses.data?.items.length ? <Empty icon="store">No {status} laundries.</Empty> : (
+            <ul className="divide-y divide-slate-100">
+              {businesses.data.items.map((b) => (
+                <li key={b.id}>
+                  <ListRow to={`/admin/businesses/${b.id}`}>
+                    <div className="min-w-0">
+                      <p className="font-medium text-slate-900">{b.business_name}</p>
+                      <p className="truncate text-sm text-slate-500">{b.owner_name} · {b.city}</p>
+                    </div>
+                    <span className="text-xs text-slate-500">{when(b.registered_at)}</span>
+                  </ListRow>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
+      </div>
     </div>
   );
 }
@@ -159,20 +177,27 @@ export function AdminIncidents() {
   }, [status]);
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <PageTitle>Incidents</PageTitle>
-        <div className="w-48"><Select value={status} onChange={(e) => setStatus(e.target.value)} options={[
-          { value: "active", label: "Open & investigating" }, ...["open", "investigating", "resolved", "dismissed"].map((s) => ({ value: s, label: label(s) }))]} /></div>
-      </div>
-      {loading ? <Spinner /> : error ? <Alert>{error}</Alert> : !data?.items.length ? <Empty>No incidents.</Empty> : (
-        <ul className="space-y-2">
-          {data.items.map((i) => (
-            <li key={i.id}><Link to={`/admin/incidents/${i.id}`} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white p-3 hover:border-sky-300">
-              <span><span className="font-mono font-semibold">{i.reference}</span> · {label(i.category)} {i.order_number && `· ${i.order_number}`} {i.is_automatic && <Badge color="purple">automatic</Badge>}</span>
-              <span className="flex gap-2"><StatusBadge status={i.severity} /><StatusBadge status={i.status} /></span>
-            </Link></li>
-          ))}
-        </ul>
+      <PageTitle sub="Reports from users and problems the system detected by itself."
+        actions={<div className="w-52"><Select aria-label="Show" value={status} onChange={(e) => setStatus(e.target.value)} options={[
+          { value: "active", label: "Open & investigating" }, ...["open", "investigating", "resolved", "dismissed"].map((s) => ({ value: s, label: label(s) }))]} /></div>}>
+        Incidents
+      </PageTitle>
+      {loading ? <Spinner /> : error ? <Alert>{error}</Alert> : !data?.items.length ? <Card><Empty icon="checkCircle" title="All clear">No incidents here.</Empty></Card> : (
+        <Card padded={false}>
+          <ul className="divide-y divide-slate-100">
+            {data.items.map((i) => (
+              <li key={i.id}>
+                <ListRow to={`/admin/incidents/${i.id}`}>
+                  <div className="min-w-0">
+                    <p className="flex flex-wrap items-center gap-2 font-mono text-sm font-semibold text-slate-900">{i.reference} {i.is_automatic && <Badge color="purple">automatic</Badge>}</p>
+                    <p className="text-sm text-slate-500">{label(i.category)}{i.order_number && ` · order ${i.order_number}`}</p>
+                  </div>
+                  <span className="flex gap-2"><StatusBadge status={i.severity} /><StatusBadge status={i.status} /></span>
+                </ListRow>
+              </li>
+            ))}
+          </ul>
+        </Card>
       )}
     </div>
   );
@@ -202,11 +227,10 @@ export function AdminIncidentDetail() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <h1 className="font-mono text-2xl font-bold">{data.reference}</h1>
-        <StatusBadge status={data.status} /><StatusBadge status={data.severity} />
-        <span className="text-sm text-slate-500">{label(data.category)} · reported by {data.reporter_name} ({data.reporter_role}) · {when(data.created_at)}</span>
-      </div>
+      <PageTitle back={{ to: "/admin/incidents", label: "Incidents" }} actions={<><StatusBadge status={data.severity} /><StatusBadge status={data.status} /></>}
+        sub={<>{label(data.category)} · reported by {data.reporter_name} ({data.reporter_role}) · {when(data.created_at)}</>}>
+        <span className="font-mono">{data.reference}</span>
+      </PageTitle>
       <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
         <div className="space-y-4">
           <Card title="Report"><p className="whitespace-pre-wrap text-sm">{data.description}</p></Card>
@@ -221,13 +245,13 @@ export function AdminIncidentDetail() {
                     {ev.handovers.map((h, i) => (
                       <li key={i} className="flex flex-wrap items-center gap-2">
                         <b>{label(h.kind)}</b> {h.from_name} → {h.to_name} · {h.method} · {when(h.created_at)}
-                        {h.latitude != null && <a className="text-sky-700 underline" target="_blank" rel="noreferrer" href={osmLink(h.latitude, h.longitude!)}>location</a>}
+                        {h.latitude != null && <a className="text-brand-700 underline" target="_blank" rel="noreferrer" href={osmLink(h.latitude, h.longitude!)}>location</a>}
                         {h.location_flagged && <Badge color="red">{Math.round(h.distance_from_expected_m ?? 0)} m from address</Badge>}
                       </li>
                     ))}
                   </ul>
                 )}
-                {ev && <Link to={`/admin/routes?order=${data.order_id}`} className="mt-2 inline-block text-sm text-sky-700 underline">Driver routes for this order</Link>}
+                {ev && <Link to={`/admin/routes?order=${data.order_id}`} className="mt-2 inline-block text-sm text-brand-700 underline">Driver routes for this order</Link>}
               </Card>
               <Card title="Seals"><Seals items={ev.seals} /></Card>
               <Card title="Status history"><Timeline events={ev.history} /></Card>

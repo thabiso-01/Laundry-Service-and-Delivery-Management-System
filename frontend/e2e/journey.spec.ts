@@ -100,7 +100,8 @@ test("customer → laundry → drivers → delivered, all through the screens", 
   await login(owner, "owner@demo.lc");
   await owner.getByRole("link", { name: new RegExp(orderNumber) }).click();
   await owner.getByRole("button", { name: "Accept order" }).click();
-  await expect(owner.getByText("Accepted").first()).toBeVisible();
+  await expect(owner.getByRole("button", { name: "Accept order" })).toHaveCount(0);
+  await expect(owner.getByText("A driver is on the way to collect")).toBeVisible();
 
   // Customer now sees the collection code
   await customer.reload();
@@ -124,7 +125,7 @@ test("customer → laundry → drivers → delivered, all through the screens", 
   await driver1.getByRole("button", { name: "Confirm collection" }).click();
   // The step is only done when the server has moved the job on and the form is gone
   await expect(driver1.getByRole("button", { name: "Confirm collection" })).toHaveCount(0);
-  await expect(driver1.getByText("Done ✔")).toBeVisible();
+  await expect(driver1.getByText("Step confirmed")).toBeVisible();
 
   // ---------- Laundry receives, weighs, cleans ----------
   await owner.reload();
@@ -151,7 +152,7 @@ test("customer → laundry → drivers → delivered, all through the screens", 
   await driver2.getByRole("button", { name: "Confirm pickup" }).click();
   // The step is only done when the server has moved the job on and the form is gone
   await expect(driver2.getByRole("button", { name: "Confirm pickup" })).toHaveCount(0);
-  await expect(driver2.getByText("Done ✔")).toBeVisible();
+  await expect(driver2.getByText("Step confirmed")).toBeVisible();
 
   await customer.reload();
   await expect(customer.getByText("Delivery code")).toBeVisible();
@@ -164,7 +165,7 @@ test("customer → laundry → drivers → delivered, all through the screens", 
   await driver2.getByRole("button", { name: "Confirm delivery" }).click();
   // The step is only done when the server has moved the job on and the form is gone
   await expect(driver2.getByRole("button", { name: "Confirm delivery" })).toHaveCount(0);
-  await expect(driver2.getByText("Done ✔")).toBeVisible();
+  await expect(driver2.getByText("Step confirmed")).toBeVisible();
 
   // ---------- Customer sees it all and leaves a review ----------
   await customer.reload();

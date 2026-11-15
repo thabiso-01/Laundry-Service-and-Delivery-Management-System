@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { api, apiBlobUrl } from "../api/client";
 import type { DocumentsOverview, Incident, IncidentSummary, Notification, OrderSummary, Page } from "../api/types";
 import { useAuth } from "../auth/AuthContext";
-import { Alert, Button, Card, Checkbox, Empty, Input, PageTitle, Select, Spinner, StatusBadge, TextArea } from "../components/ui";
+import { Alert, Button, ButtonLink, Card, Checkbox, Empty, Input, ListRow, PageTitle, Select, Spinner, StatusBadge, TextArea } from "../components/ui";
 import { label, when } from "../lib/format";
 import { useAction, useAsync } from "../lib/useAsync";
 
@@ -61,7 +61,7 @@ export function Documents() {
               <li key={d.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
                 <span>{label(d.document_type)} · {d.original_filename} · {when(d.uploaded_at)}</span>
                 <span className="flex items-center gap-2">
-                  <button className="text-sky-700 underline" onClick={async () => window.open(await apiBlobUrl(`/api/documents/${d.id}/file`), "_blank")}>View</button>
+                  <button className="text-brand-700 underline" onClick={async () => window.open(await apiBlobUrl(`/api/documents/${d.id}/file`), "_blank")}>View</button>
                   <StatusBadge status={d.status} />
                 </span>
               </li>
@@ -98,7 +98,7 @@ export function Notifications() {
         <ul className="space-y-2">
           {data.items.map((n) => (
             <li key={n.id}>
-              <button onClick={() => void open(n)} className={`w-full rounded-xl border p-3 text-left ${n.read_at ? "border-slate-200 bg-white" : "border-sky-200 bg-sky-50"}`}>
+              <button onClick={() => void open(n)} className={`w-full rounded-xl border p-3 text-left ${n.read_at ? "border-slate-200 bg-white" : "border-brand-200 bg-brand-50"}`}>
                 <p className="font-medium">{n.title}</p>
                 <p className="text-sm text-slate-700">{n.body}</p>
                 <p className="mt-1 text-xs text-slate-500">{when(n.created_at)}</p>
@@ -120,21 +120,26 @@ export function MyIncidents() {
   const { data, loading, error } = useAsync(() => api<Page<IncidentSummary>>("/api/incidents?limit=50"));
   return (
     <div className="max-w-3xl">
-      <div className="flex items-center justify-between">
-        <PageTitle>My reports</PageTitle>
-        <Link to="/incidents/new"><Button>Report a problem</Button></Link>
-      </div>
-      {loading ? <Spinner /> : error ? <Alert>{error}</Alert> : !data?.items.length ? <Empty>You haven't reported anything.</Empty> : (
-        <ul className="space-y-2">
-          {data.items.map((i) => (
-            <li key={i.id}>
-              <Link to={`/incidents/${i.id}`} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white p-3 hover:border-sky-300">
-                <span><span className="font-mono font-semibold">{i.reference}</span> · {label(i.category)} {i.order_number && `· ${i.order_number}`}</span>
-                <StatusBadge status={i.status} />
-              </Link>
-            </li>
-          ))}
-        </ul>
+      <PageTitle sub="Something wrong with an order, a driver or a laundry? Tell us and track what we do about it."
+        actions={<ButtonLink to="/incidents/new" icon="plus">Report a problem</ButtonLink>}>Help & reports</PageTitle>
+      {loading ? <Spinner /> : error ? <Alert>{error}</Alert> : !data?.items.length ? (
+        <Card><Empty icon="flag" title="No reports">You haven't reported anything. If something goes wrong, we're here to help.</Empty></Card>
+      ) : (
+        <Card padded={false}>
+          <ul className="divide-y divide-slate-100">
+            {data.items.map((i) => (
+              <li key={i.id}>
+                <ListRow to={`/incidents/${i.id}`}>
+                  <div className="min-w-0">
+                    <p className="font-mono text-sm font-semibold text-slate-900">{i.reference}</p>
+                    <p className="text-sm text-slate-500">{label(i.category)}{i.order_number && ` · order ${i.order_number}`}</p>
+                  </div>
+                  <StatusBadge status={i.status} />
+                </ListRow>
+              </li>
+            ))}
+          </ul>
+        </Card>
       )}
     </div>
   );
@@ -185,11 +190,10 @@ export function IncidentDetail() {
   const closed = ["resolved", "dismissed"].includes(data.status);
   return (
     <div className="max-w-3xl space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <h1 className="font-mono text-2xl font-bold">{data.reference}</h1>
-        <StatusBadge status={data.status} />
-        <span className="text-sm text-slate-500">{label(data.category)} {data.order_number && `· order ${data.order_number}`}</span>
-      </div>
+      <PageTitle back={{ to: "/incidents", label: "Help & reports" }} actions={<StatusBadge status={data.status} />}
+        sub={<>{label(data.category)} {data.order_number && `· order ${data.order_number}`}</>}>
+        <span className="font-mono">{data.reference}</span>
+      </PageTitle>
       <Card title="Your report"><p className="whitespace-pre-wrap text-sm">{data.description}</p></Card>
       {data.resolution && <Alert kind="success"><b>Outcome:</b> {data.resolution}</Alert>}
       <Card title="Updates">
@@ -271,7 +275,7 @@ export function Security() {
         )}
         <div className="mt-3"><Alert>{error}</Alert></div>
       </Card>
-      <Card title="Password"><Link to="/change-password" className="text-sm text-sky-700 underline">Change your password</Link></Card>
+      <Card title="Password"><Link to="/change-password" className="text-sm text-brand-700 underline">Change your password</Link></Card>
       <PrivacyCards />
     </div>
   );

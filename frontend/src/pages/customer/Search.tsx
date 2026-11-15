@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { api } from "../../api/client";
 import type { LaundrySearchItem, Page } from "../../api/types";
-import { Alert, Button, Card, Empty, Input, PageTitle, Select, Spinner, Stars } from "../../components/ui";
+import { Icon } from "../../components/icons";
+import { Alert, Button, Card, Empty, PageTitle, Select, Spinner, Stars } from "../../components/ui";
 import { CATEGORIES, DEFAULT_LOCATION, currentPosition, label } from "../../lib/format";
 import { useAsync } from "../../lib/useAsync";
 
@@ -16,6 +17,7 @@ export function Search() {
   const sort = params.get("sort") ?? "distance";
   const [q, setQ] = useState(params.get("q") ?? "");
   const [locError, setLocError] = useState<string | null>(null);
+  const [locating, setLocating] = useState(false);
 
   const update = (changes: Record<string, string>) => {
     const next = new URLSearchParams(params);
@@ -33,11 +35,14 @@ export function Search() {
 
   const locate = async () => {
     setLocError(null);
+    setLocating(true);
     try {
       const pos = await currentPosition();
       update({ lat: pos.latitude.toFixed(5), lng: pos.longitude.toFixed(5) });
     } catch (e) {
       setLocError((e as Error).message + ". Showing laundries near Johannesburg CBD.");
+    } finally {
+      setLocating(false);
     }
   };
 
@@ -45,57 +50,71 @@ export function Search() {
 
   return (
     <div>
-      <PageTitle sub={usingDefault ? "Showing results near Johannesburg CBD." : `Near ${lat.toFixed(4)}, ${lng.toFixed(4)}`}>
-        Find a laundry near you
-      </PageTitle>
-      <Card className="mb-4">
-        <form className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5" onSubmit={(e) => { e.preventDefault(); update({ q }); }}>
-          <div className="lg:col-span-2">
-            <Input label="Search" placeholder="Name, suburb or city" value={q} onChange={(e) => setQ(e.target.value)} />
+      <PageTitle sub="Compare prices, ratings and turnaround times, then book a collection.">Find a laundry</PageTitle>
+
+      <Card className="mb-6">
+        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); update({ q }); }}>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <div className="relative flex-1">
+              <Icon name="search" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input aria-label="Search" placeholder="Search by name, suburb or city" value={q} onChange={(e) => setQ(e.target.value)}
+                className="block h-11 w-full rounded-lg border-0 bg-white pl-9 pr-3 text-sm shadow-sm ring-1 ring-inset ring-slate-300 outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-brand-600" />
+            </div>
+            <div className="flex gap-2">
+              <Button type="submit" className="h-11 flex-1 sm:flex-none">Search</Button>
+              <Button type="button" variant="secondary" icon="navigation" className="h-11 flex-1 sm:flex-none" busy={locating} onClick={locate}>Use my location</Button>
+            </div>
           </div>
-          <Select label="Service" value={category} onChange={(e) => update({ category: e.target.value })}
-            options={[{ value: "", label: "Any service" }, ...CATEGORIES.map((c) => ({ value: c, label: label(c) }))]} />
-          <Select label="Distance" value={radius} onChange={(e) => update({ radius: e.target.value })}
-            options={["5", "10", "15", "25", "50"].map((r) => ({ value: r, label: `Within ${r} km` }))} />
-          <Select label="Sort by" value={sort} onChange={(e) => update({ sort: e.target.value })}
-            options={[
-              { value: "distance", label: "Closest" },
-              { value: "rating", label: "Best rated" },
-              { value: "turnaround", label: "Fastest" },
-              ...(category ? [{ value: "price", label: "Cheapest" }] : []),
-            ]} />
-          <div className="flex gap-2 sm:col-span-2 lg:col-span-5">
-            <Button type="submit">Search</Button>
-            <Button type="button" variant="secondary" onClick={locate}>📍 Use my location</Button>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Select label="Service" value={category} onChange={(e) => update({ category: e.target.value })}
+              options={[{ value: "", label: "Any service" }, ...CATEGORIES.map((c) => ({ value: c, label: label(c) }))]} />
+            <Select label="Distance" value={radius} onChange={(e) => update({ radius: e.target.value })}
+              options={["5", "10", "15", "25", "50"].map((r) => ({ value: r, label: `Within ${r} km` }))} />
+            <Select label="Sort by" value={sort} onChange={(e) => update({ sort: e.target.value })}
+              options={[
+                { value: "distance", label: "Closest" },
+                { value: "rating", label: "Best rated" },
+                { value: "turnaround", label: "Fastest" },
+                ...(category ? [{ value: "price", label: "Cheapest" }] : []),
+              ]} />
           </div>
         </form>
-        {locError && <div className="mt-3"><Alert kind="warning">{locError}</Alert></div>}
+        {locError && <div className="mt-4"><Alert kind="warning">{locError}</Alert></div>}
       </Card>
 
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-sm text-slate-500">
+        <span className="inline-flex items-center gap-1.5">
+          <Icon name="pin" className="h-4 w-4" />
+          {usingDefault ? "Near Johannesburg CBD" : "Near your location"}
+        </span>
+        {data && <span>{data.items.length} {data.items.length === 1 ? "laundry" : "laundries"}</span>}
+      </div>
+
       {loading ? <Spinner /> : error ? <Alert>{error}</Alert> : !data?.items.length ? (
-        <Empty>No laundries found. Try a wider distance or another service.</Empty>
+        <Card><Empty icon="search" title="No laundries found">Try a wider distance or another service.</Empty></Card>
       ) : (
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2">
           {data.items.map((l) => (
             <Link key={l.id} to={`/laundries/${l.id}?lat=${lat}&lng=${lng}`}
-              className="block rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-sky-300 hover:shadow">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <h3 className="font-semibold text-slate-900">{l.business_name}</h3>
-                  <p className="text-sm text-slate-500">{[l.suburb, l.city].filter(Boolean).join(", ")}</p>
+              className="group flex flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-card transition hover:border-brand-300 hover:shadow-raised">
+              <div className="flex items-start gap-3">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-700"><Icon name="washer" /></span>
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-semibold text-slate-900 group-hover:text-brand-700">{l.business_name}</h3>
+                  <p className="truncate text-sm text-slate-500">{[l.suburb, l.city].filter(Boolean).join(", ")}</p>
+                  <div className="mt-1"><Stars value={l.rating_avg} count={l.rating_count} /></div>
                 </div>
-                <span className="whitespace-nowrap text-sm font-medium text-slate-700">{l.distance_km.toFixed(1)} km</span>
+                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium whitespace-nowrap text-slate-600">{l.distance_km.toFixed(1)} km</span>
               </div>
-              <div className="mt-2"><Stars value={l.rating_avg} count={l.rating_count} /></div>
-              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-600">
-                <span>{l.from_price_display}</span>
-                <span>Ready in {l.fastest_turnaround_hours} h</span>
-                <span>{l.service_count} service{l.service_count === 1 ? "" : "s"}</span>
+              <div className="mt-4 grid grid-cols-3 gap-2 border-t border-slate-100 pt-4 text-sm">
+                <div><p className="text-xs text-slate-500">Price</p><p className="font-medium text-slate-900">{l.from_price_display}</p></div>
+                <div><p className="text-xs text-slate-500">Ready in</p><p className="font-medium text-slate-900">{l.fastest_turnaround_hours} h</p></div>
+                <div><p className="text-xs text-slate-500">Services</p><p className="font-medium text-slate-900">{l.service_count}</p></div>
               </div>
               {l.matching_services && (
-                <ul className="mt-3 space-y-1 border-t border-slate-100 pt-2 text-sm">
+                <ul className="mt-4 space-y-1.5 rounded-lg bg-slate-50 p-3 text-sm">
                   {l.matching_services.map((s) => (
-                    <li key={s.id} className="flex justify-between"><span>{s.name}</span><span className="text-slate-600">{s.price_display}</span></li>
+                    <li key={s.id} className="flex justify-between gap-2"><span className="text-slate-700">{s.name}</span><span className="font-medium text-slate-900">{s.price_display}</span></li>
                   ))}
                 </ul>
               )}

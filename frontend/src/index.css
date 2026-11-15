@@ -1,1 +1,45 @@
 @import "tailwindcss";
+
+/* LaundryConnect design tokens. "brand" is the main colour; everything else
+   uses Tailwind's slate (neutrals) and emerald/amber/rose (statuses). */
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --color-brand-50: #eef6ff;
+  --color-brand-100: #d9eaff;
+  --color-brand-200: #bcdaff;
+  --color-brand-300: #8ec3ff;
+  --color-brand-400: #59a2fc;
+  --color-brand-500: #337ff8;
+  --color-brand-600: #1d60ed;
+  --color-brand-700: #154ad6;
+  --color-brand-800: #183ead;
+  --color-brand-900: #193988;
+  --color-brand-950: #142453;
+
+  --shadow-card: 0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 3px 0 rgb(15 23 42 / 0.06);
+  --shadow-raised: 0 4px 12px -2px rgb(15 23 42 / 0.08), 0 2px 4px -2px rgb(15 23 42 / 0.05);
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "cv11", "ss01";
+  }
+  body {
+    @apply bg-slate-50 text-slate-900;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand-500;
+  }
+  input[type="number"]::-webkit-inner-spin-button {
+    opacity: 1;
+  }
+}
+
+/* Printing a bag label: only the label */
+@media print {
+  .no-print { display: none !important; }
+}

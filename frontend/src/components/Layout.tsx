@@ -1,19 +1,43 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, NavLink, Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { api } from "../api/client";
 import type { Role } from "../api/types";
 import { useAuth } from "../auth/AuthContext";
+import { Icon, Logo, type IconName } from "./icons";
 import { Spinner } from "./ui";
 
-const NAV: Record<Role, [string, string][]> = {
-  customer: [["/search", "Find a laundry"], ["/orders", "My orders"], ["/incidents", "My reports"]],
-  business: [["/business", "Orders"], ["/business/scan", "Scan a bag"], ["/business/services", "Services"], ["/business/staff", "Staff"],
-    ["/business/profile", "Profile"], ["/documents", "Documents"]],
-  driver: [["/driver", "Jobs"], ["/documents", "Documents"], ["/incidents", "My reports"]],
-  admin: [["/admin", "Verification"], ["/admin/incidents", "Incidents"], ["/admin/routes", "Route alerts"]],
+type NavItem = { to: string; text: string; icon: IconName; end?: boolean };
+
+const NAV: Record<Role, NavItem[]> = {
+  customer: [
+    { to: "/search", text: "Find a laundry", icon: "search" },
+    { to: "/orders", text: "My orders", icon: "package" },
+    { to: "/incidents", text: "Help & reports", icon: "flag" },
+  ],
+  business: [
+    { to: "/business", text: "Orders", icon: "inbox", end: true },
+    { to: "/business/scan", text: "Scan a bag", icon: "scan" },
+    { to: "/business/services", text: "Services & prices", icon: "tag" },
+    { to: "/business/staff", text: "Staff", icon: "users" },
+    { to: "/business/profile", text: "Business profile", icon: "store" },
+    { to: "/documents", text: "Documents", icon: "file" },
+    { to: "/incidents", text: "Help & reports", icon: "flag" },
+  ],
+  driver: [
+    { to: "/driver", text: "Jobs", icon: "truck", end: true },
+    { to: "/documents", text: "Documents", icon: "file" },
+    { to: "/incidents", text: "Help & reports", icon: "flag" },
+  ],
+  admin: [
+    { to: "/admin", text: "Verification", icon: "shield", end: true },
+    { to: "/admin/incidents", text: "Incidents", icon: "flag" },
+    { to: "/admin/routes", text: "Route alerts", icon: "route" },
+  ],
 };
 
-function UnreadBadge() {
+const ROLE_NAME: Record<Role, string> = { customer: "Customer", business: "Laundry", driver: "Driver", admin: "Administrator" };
+
+function useUnread() {
   const [unread, setUnread] = useState(0);
   const location = useLocation();
   useEffect(() => {
@@ -29,12 +53,18 @@ function UnreadBadge() {
       clearInterval(timer);
     };
   }, [location.pathname]);
+  return unread;
+}
+
+function Bell() {
+  const unread = useUnread();
   return (
-    <NavLink to="/notifications" className="relative rounded-lg px-2 py-1 text-slate-600 hover:bg-slate-100" title="Notifications">
-      <span aria-hidden>🔔</span>
-      <span className="sr-only">Notifications</span>
+    <NavLink to="/notifications" title="Notifications"
+      className={({ isActive }) => `relative grid h-9 w-9 place-items-center rounded-lg transition ${isActive ? "bg-brand-50 text-brand-700" : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"}`}>
+      <Icon name="bell" />
+      <span className="sr-only">Notifications{unread > 0 && ` (${unread} unread)`}</span>
       {unread > 0 && (
-        <span className="absolute -right-1 -top-1 rounded-full bg-rose-600 px-1.5 text-[10px] font-bold text-white">
+        <span className="absolute right-0.5 top-0.5 min-w-4 rounded-full bg-rose-600 px-1 text-center text-[10px] leading-4 font-semibold text-white ring-2 ring-white">
           {unread > 99 ? "99+" : unread}
         </span>
       )}
@@ -42,78 +72,167 @@ function UnreadBadge() {
   );
 }
 
-export function Layout() {
+function Initials({ name }: { name: string }) {
+  const letters = name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase()).join("");
+  return <span className="grid h-8 w-8 place-items-center rounded-full bg-brand-100 text-xs font-semibold text-brand-800">{letters}</span>;
+}
+
+function AccountMenu() {
   const { me, logout } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const links = me && !me.must_change_password ? NAV[me.role] : [];
+  const ref = useRef<HTMLDivElement>(null);
+  const location = useLocation();
+  useEffect(() => setOpen(false), [location.pathname]);
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [open]);
+  if (!me) return null;
+  return (
+    <div className="relative" ref={ref}>
+      <button onClick={() => setOpen(!open)} aria-expanded={open} aria-haspopup="menu"
+        className="flex items-center gap-2 rounded-lg py-1 pl-1 pr-2 text-left transition hover:bg-slate-100">
+        <Initials name={me.full_name} />
+        <span className="hidden leading-tight sm:block">
+          <span className="block text-sm font-medium text-slate-800">{me.full_name.split(" ")[0]}</span>
+          <span className="block text-xs text-slate-500">{ROLE_NAME[me.role]}</span>
+        </span>
+        <Icon name="chevronDown" className="hidden h-4 w-4 text-slate-400 sm:block" />
+      </button>
+      {open && (
+        <div role="menu" className="absolute right-0 z-30 mt-2 w-60 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-raised">
+          <div className="border-b border-slate-100 px-4 py-3">
+            <p className="truncate text-sm font-medium text-slate-900">{me.full_name}</p>
+            <p className="truncate text-xs text-slate-500">{me.email}</p>
+          </div>
+          {!me.must_change_password && (
+            <Link to="/security" role="menuitem" className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50">
+              <Icon name="lock" className="h-4 w-4 text-slate-400" /> Account & privacy
+            </Link>
+          )}
+          <button role="menuitem" onClick={() => { logout(); navigate("/login"); }}
+            className="flex w-full items-center gap-2.5 border-t border-slate-100 px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50">
+            <Icon name="logout" className="h-4 w-4 text-slate-400" /> Log out
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SideNav({ items, onNavigate }: { items: NavItem[]; onNavigate?: () => void }) {
+  return (
+    <nav className="space-y-0.5" aria-label="Main">
+      {items.map((item) => (
+        <NavLink key={item.to} to={item.to} end={item.end ?? true} onClick={onNavigate}
+          className={({ isActive }) =>
+            `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${isActive ? "bg-brand-50 text-brand-800" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"}`}>
+          {({ isActive }) => (
+            <>
+              <Icon name={item.icon} className={`h-[18px] w-[18px] ${isActive ? "text-brand-700" : "text-slate-400"}`} />
+              {item.text}
+            </>
+          )}
+        </NavLink>
+      ))}
+    </nav>
+  );
+}
+
+// Signed-in app: sidebar on desktop, slide-in menu on phones
+function AppShell() {
+  const { me } = useAuth();
+  const [open, setOpen] = useState(false);
+  const location = useLocation();
+  useEffect(() => setOpen(false), [location.pathname]);
+  const items = me && !me.must_change_password ? NAV[me.role] : [];
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
-          <Link to="/" className="text-lg font-bold text-sky-700">
-            LaundryConnect
-          </Link>
-          <nav className="hidden flex-1 gap-1 md:flex">
-            {links.map(([to, text]) => (
-              <NavLink
-                key={to}
-                to={to}
-                end
-                className={({ isActive }) =>
-                  `rounded-lg px-3 py-1.5 text-sm ${isActive ? "bg-sky-50 font-medium text-sky-800" : "text-slate-600 hover:bg-slate-100"}`
-                }
-              >
-                {text}
-              </NavLink>
-            ))}
-          </nav>
-          <div className="ml-auto flex items-center gap-2">
-            {me ? (
-              <>
-                {!me.must_change_password && <UnreadBadge />}
-                <NavLink to="/security" className="hidden text-sm text-slate-600 hover:underline sm:block" title="Account & privacy">
-                  {me.full_name.split(" ")[0]}
-                </NavLink>
-                <button
-                  className="rounded-lg px-2 py-1 text-sm text-slate-600 hover:bg-slate-100"
-                  onClick={() => {
-                    logout();
-                    navigate("/login");
-                  }}
-                >
-                  Log out
-                </button>
-                {links.length > 0 && (
-                  <button className="rounded-lg px-2 py-1 md:hidden" onClick={() => setOpen(!open)} aria-label="Menu">
-                    ☰
-                  </button>
-                )}
-              </>
-            ) : (
-              <>
-                <Link to="/search" className="text-sm text-slate-600 hover:underline">Find a laundry</Link>
-                <Link to="/login" className="rounded-lg bg-sky-700 px-3 py-1.5 text-sm font-medium text-white">Log in</Link>
-              </>
-            )}
+      {/* Desktop sidebar */}
+      <aside className="no-print fixed inset-y-0 left-0 z-20 hidden w-64 flex-col border-r border-slate-200 bg-white lg:flex">
+        <div className="flex h-16 items-center px-5"><Link to="/"><Logo /></Link></div>
+        <div className="flex-1 overflow-y-auto px-3 py-4"><SideNav items={items} /></div>
+        <div className="border-t border-slate-100 px-5 py-4 text-xs text-slate-400">
+          <span className="inline-flex items-center gap-1.5"><Icon name="shield" className="h-3.5 w-3.5" /> Every handover verified</span>
+        </div>
+      </aside>
+
+      {/* Phone menu */}
+      {open && (
+        <div className="fixed inset-0 z-40 lg:hidden">
+          <div className="absolute inset-0 bg-slate-900/40" onClick={() => setOpen(false)} />
+          <div className="absolute inset-y-0 left-0 flex w-72 max-w-[85%] flex-col bg-white shadow-xl">
+            <div className="flex h-16 items-center justify-between px-4">
+              <Logo />
+              <button className="grid h-9 w-9 place-items-center rounded-lg text-slate-500 hover:bg-slate-100" onClick={() => setOpen(false)} aria-label="Close menu">
+                <Icon name="x" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto px-3 py-2">
+              <SideNav items={[...items, ...(items.length ? [{ to: "/security", text: "Account & privacy", icon: "lock" as IconName }] : [])]} />
+            </div>
           </div>
         </div>
-        {open && (
-          <nav className="border-t border-slate-100 px-4 py-2 md:hidden">
-            {[...links, ["/security", "Account & privacy"] as [string, string]].map(([to, text]) => (
-              <NavLink key={to} to={to} end onClick={() => setOpen(false)} className="block rounded-lg px-2 py-2 text-sm text-slate-700">
-                {text}
-              </NavLink>
-            ))}
-          </nav>
-        )}
-      </header>
-      <main className="mx-auto max-w-6xl px-4 py-6">
-        <Outlet />
-      </main>
+      )}
+
+      <div className="lg:pl-64">
+        <header className="no-print sticky top-0 z-10 flex h-16 items-center gap-3 border-b border-slate-200 bg-white/90 px-4 backdrop-blur sm:px-6">
+          {items.length > 0 && (
+            <button className="-ml-1 grid h-9 w-9 place-items-center rounded-lg text-slate-600 hover:bg-slate-100 lg:hidden" onClick={() => setOpen(true)} aria-label="Menu">
+              <Icon name="menu" />
+            </button>
+          )}
+          <Link to="/" className="lg:hidden"><Logo /></Link>
+          <div className="ml-auto flex items-center gap-1.5">
+            {me && !me.must_change_password && <Bell />}
+            <AccountMenu />
+          </div>
+        </header>
+        <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
+}
+
+// Visitors who aren't signed in: simple top bar
+function PublicShell() {
+  const location = useLocation();
+  const wide = location.pathname === "/";
+  return (
+    <div className="flex min-h-screen flex-col bg-slate-50">
+      <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/90 backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4 sm:px-6">
+          <Link to="/"><Logo /></Link>
+          <nav className="ml-auto flex items-center gap-1 sm:gap-2">
+            <NavLink to="/search" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 sm:block">Find a laundry</NavLink>
+            <NavLink to="/login" className="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">Log in</NavLink>
+            <NavLink to="/register" className="rounded-lg bg-brand-700 px-3.5 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-800">Sign up</NavLink>
+          </nav>
+        </div>
+      </header>
+      <main className={wide ? "flex-1" : "mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6"}>
+        <Outlet />
+      </main>
+      <footer className="border-t border-slate-200 bg-white">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-6 text-sm text-slate-500 sm:px-6">
+          <span>© {new Date().getFullYear()} LaundryConnect · South Africa</span>
+          <span className="inline-flex items-center gap-1.5"><Icon name="lock" className="h-4 w-4" /> Your data is protected under POPIA</span>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+export function Layout() {
+  const { me, loading } = useAuth();
+  if (loading) return <Spinner />;
+  return me ? <AppShell /> : <PublicShell />;
 }
 
 // Only lets the given roles in (SEC-019 on the screen side; the API enforces it too)

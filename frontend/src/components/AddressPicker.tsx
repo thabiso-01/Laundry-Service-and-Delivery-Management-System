@@ -114,7 +114,7 @@ export function AddressPicker({ value, onChange, label = "Address", required }: 
           <ul className="absolute z-[1000] mt-1 max-h-64 w-full overflow-auto rounded-lg border border-slate-200 bg-white shadow-lg">
             {results.map((r, i) => (
               <li key={i}>
-                <button type="button" className="block w-full px-3 py-2 text-left text-sm hover:bg-sky-50"
+                <button type="button" className="block w-full px-3 py-2 text-left text-sm hover:bg-brand-50"
                   onClick={() => { onChange(merge(value, r, false)); setOpen(false); setQuery(""); setMessage(null); }}>
                   {r.label}
                 </button>
@@ -123,7 +123,7 @@ export function AddressPicker({ value, onChange, label = "Address", required }: 
           </ul>
         )}
       </div>
-      <Button type="button" variant="ghost" className="px-0" onClick={() => void here()}>📍 Use my current location</Button>
+      <Button type="button" variant="ghost" size="sm" icon="navigation" className="-ml-3" onClick={() => void here()}>Use my current location</Button>
       {message && <p className="text-sm text-amber-700">{message}</p>}
 
       {pinned ? (
