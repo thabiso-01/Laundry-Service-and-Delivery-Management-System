@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import BigInteger, Boolean, DateTime, Integer, String, false
+from sqlalchemy import BigInteger, Boolean, DateTime, Integer, String, false, true
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -37,6 +37,8 @@ class User(TimestampMixin, Base):
         pg_enum(AccountStatus, "account_status"), default=AccountStatus.ACTIVE
     )
 
+    # The user can switch off SMS (the in-app inbox always works)
+    sms_enabled: Mapped[bool] = mapped_column(Boolean, default=True, server_default=true())
     email_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     phone_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     # Set for accounts created with a temporary password (e.g. staff added by an

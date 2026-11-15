@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
@@ -26,8 +28,16 @@ from app.api.routes import (
 )
 from app.config import settings
 from app.database import get_db
+from app.services import sms
 
-app = FastAPI(title=settings.app_name)
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    sms.start_worker()  # sends queued SMS in the background
+    yield
+    sms.stop_worker()
+
+
+app = FastAPI(title=settings.app_name, lifespan=lifespan)
 app.include_router(auth.router)
 app.include_router(laundries.router)
 app.include_router(geocode.router)

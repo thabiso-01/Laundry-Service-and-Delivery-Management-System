@@ -109,6 +109,14 @@ class Notification(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_now, server_default=func.now(), index=True)
 
+    # SMS outbox: sent by a background worker after the transaction commits
+    # None = in-app only; pending → sent | failed | skipped
+    sms_status: Mapped[str | None] = mapped_column(String(20), index=True)
+    sms_attempts: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    sms_sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    sms_provider_id: Mapped[str | None] = mapped_column(String(100))
+    sms_error: Mapped[str | None] = mapped_column(String(300))
+
 
 class Review(Base):
     """A customer's rating of a laundry or a driver after delivery (UR-014)."""

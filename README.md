@@ -152,6 +152,10 @@ privacy policy should state these retention periods.
 the API supports **PayFast** (signed checkout + fully verified ITN
 notifications): see [docs/PAYMENTS.md](docs/PAYMENTS.md).
 
+**SMS.** The most important notifications (driver on the way, out for delivery,
+delivered, balance due, security alerts) are also sent by SMS via BulkSMS;
+development just logs them. Users can switch SMS off. See [docs/SMS.md](docs/SMS.md).
+
 **Rate limits.** Login, registration, password changes, reports, photo uploads
 and address search are limited per IP address (429 + `Retry-After` when
 exceeded; the first block per window is audited). Limits are in

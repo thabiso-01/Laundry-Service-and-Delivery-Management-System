@@ -1,14 +1,13 @@
 """In-app notifications (UR-016, SEC-045).
 
 Every important event writes a message to the user's inbox in the same
-transaction as the change it describes. SMS / e-mail / push delivery can be
-added in `_deliver_externally` once a provider is chosen (e.g. Clickatell
-or BulkSMS for South African SMS); for now it only logs.
+transaction as the change it describes. The most important kinds are also
+queued for SMS (see app/services/sms.py), sent only after the transaction
+commits, to users who have a phone number and haven't switched SMS off.
 
 Messages never contain one-time codes: those are only shown in the app.
 """
 
-import logging
 from collections.abc import Iterable
 
 from sqlalchemy import select
@@ -16,12 +15,7 @@ from sqlalchemy.orm import Session
 
 from app.models import BusinessStaff, Incident, Notification, Order, User
 from app.models.enums import AccountStatus, BusinessStaffRole, UserRole
-
-log = logging.getLogger("laundryconnect.notifications")
-
-
-def _deliver_externally(user: User, title: str, body: str) -> None:
-    log.info("notify %s: %s", user.id, title)
+from app.services.sms import SMS_KINDS
 
 
 def notify(
@@ -39,10 +33,11 @@ def notify(
         if user is None or user.id in seen or user.status != AccountStatus.ACTIVE:
             continue
         seen.add(user.id)
+        wants_sms = kind in SMS_KINDS and bool(user.phone) and user.sms_enabled
         db.add(Notification(user_id=user.id, kind=kind, title=title, body=body,
                             order_id=order.id if order else None,
-                            incident_id=incident.id if incident else None))
-        _deliver_externally(user, title, body)
+                            incident_id=incident.id if incident else None,
+                            sms_status="pending" if wants_sms else None))
 
 
 def business_team(db: Session, business_id) -> list[User]:

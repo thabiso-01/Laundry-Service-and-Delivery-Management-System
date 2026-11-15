@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from app.api.deps import CurrentUser, DbSession
-from app.services import privacy
+from app.services import audit, privacy
 
 router = APIRouter(prefix="/api/me", tags=["privacy"])
 
@@ -22,6 +22,22 @@ class DeleteAccountOut(BaseModel):
     deleted: bool
     removed: dict[str, int]
     kept: list[str]
+
+
+class PreferencesIn(BaseModel):
+    sms_enabled: bool
+
+
+@router.patch("/preferences")
+def update_preferences(body: PreferencesIn, user: CurrentUser, db: DbSession,
+                       request: Request) -> dict:
+    """Switch SMS messages on or off. In-app notifications always stay on."""
+    if user.sms_enabled != body.sms_enabled:
+        user.sms_enabled = body.sms_enabled
+        audit.record(db, "privacy.preferences_changed", actor_id=user.id,
+                     details={"sms_enabled": body.sms_enabled}, request=request)
+        db.commit()
+    return {"sms_enabled": user.sms_enabled}
 
 
 @router.get("/data-export")

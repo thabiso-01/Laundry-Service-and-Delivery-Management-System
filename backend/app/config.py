@@ -92,6 +92,17 @@ class Settings(BaseSettings):
     geocoder_country_codes: str = "za"
     geocoder_requests_per_minute_per_ip: int = 30
 
+    # --- SMS (UR-016, SEC-045) ---
+    # "log" only writes SMS to the server log (development). "bulksms" sends via
+    # BulkSMS: create an API token under Settings > Developer Settings > API Tokens.
+    sms_provider: str = "log"
+    bulksms_token_id: str = ""
+    bulksms_token_secret: str = ""
+    sms_worker_enabled: bool = True     # background sender inside the API process
+    sms_poll_seconds: int = 15
+    sms_max_per_user_per_day: int = 10  # protects against a runaway SMS bill
+    sms_max_attempts: int = 3
+
     # --- Per-IP rate limits (SEC-038, SEC-040) ---
     # Counted per client IP. Behind a reverse proxy, start uvicorn with
     # --proxy-headers --forwarded-allow-ips=<proxy IP> so the real IP is used.

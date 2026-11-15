@@ -32,6 +32,8 @@ def _prepare_test_database() -> None:
     test_url = os.environ.get("TEST_DATABASE_URL") or (
         _dev_database_url().rsplit("/", 1)[0] + "/laundryconnect_test")
     os.environ["DATABASE_URL"] = test_url  # read by app.config.Settings
+    # Tests call sms.deliver_pending() directly; no background sender
+    os.environ["SMS_WORKER_ENABLED"] = "false"
 
     server_url, db_name = test_url.rsplit("/", 1)
     admin = create_engine(f"{server_url}/postgres", isolation_level="AUTOCOMMIT")

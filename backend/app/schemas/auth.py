@@ -153,3 +153,4 @@ class MeOut(UserOut):
     driver: DriverStatusOut | None = None
     business: BusinessMembershipOut | None = None
     mfa_enabled: bool = False
+    sms_enabled: bool = True

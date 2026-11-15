@@ -15,6 +15,7 @@ export interface Me {
   status: string;
   must_change_password: boolean;
   mfa_enabled: boolean;
+  sms_enabled: boolean;
   driver: { verification_status: Verification; rejection_reason: string | null; is_available: boolean } | null;
   business: {
     business_id: string;

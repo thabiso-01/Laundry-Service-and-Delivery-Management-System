@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { api, apiBlobUrl } from "../api/client";
 import type { DocumentsOverview, Incident, IncidentSummary, Notification, OrderSummary, Page } from "../api/types";
 import { useAuth } from "../auth/AuthContext";
-import { Alert, Button, Card, Empty, Input, PageTitle, Select, Spinner, StatusBadge, TextArea } from "../components/ui";
+import { Alert, Button, Card, Checkbox, Empty, Input, PageTitle, Select, Spinner, StatusBadge, TextArea } from "../components/ui";
 import { label, when } from "../lib/format";
 import { useAction, useAsync } from "../lib/useAsync";
 
@@ -277,6 +277,29 @@ export function Security() {
   );
 }
 
+function SmsCard() {
+  const { me, refresh } = useAuth();
+  const { busy, error, run } = useAction();
+  if (!me) return null;
+  return (
+    <Card title="Text messages (SMS)">
+      <p className="mb-3 text-sm text-slate-600">
+        {me.phone
+          ? <>We text <b>{me.phone}</b> only for important moments: your driver is on the way, your laundry is out for
+            delivery or delivered, a balance to pay, and security alerts. Everything also appears in your notifications.</>
+          : <>Add a mobile number to your account to get important updates by SMS.</>}
+      </p>
+      <Checkbox checked={me.sms_enabled} disabled={busy || !me.phone}
+        onChange={(e) => void run(async () => {
+          await api("/api/me/preferences", { method: "PATCH", json: { sms_enabled: e.target.checked } });
+          await refresh();
+        })}
+        label="Send me important updates by SMS" />
+      <div className="mt-2"><Alert>{error}</Alert></div>
+    </Card>
+  );
+}
+
 // POPIA s23 (access) and s24 (deletion)
 function PrivacyCards() {
   const { me, logout } = useAuth();
@@ -305,6 +328,7 @@ function PrivacyCards() {
 
   return (
     <>
+      <SmsCard />
       <Card title="Your data">
         <p className="mb-3 text-sm text-slate-600">
           Download a copy of everything LaundryConnect holds about you: your account, addresses, orders,
