@@ -188,7 +188,7 @@ function AppShell() {
       )}
 
       <div className="lg:pl-64">
-        <header className="no-print sticky top-0 z-10 flex h-16 items-center gap-3 border-b border-slate-100 bg-white/90 px-4 backdrop-blur sm:px-6">
+        <header className="no-print sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-slate-200 bg-white px-4 shadow-sm sm:px-6">
           <Link to="/" className="lg:hidden"><Logo /></Link>
           <div className="ml-auto flex items-center gap-1.5">
             {me && !me.must_change_password && <Bell />}
@@ -261,7 +261,7 @@ function PublicShell() {
   const wide = location.pathname === "/";
   return (
     <div className="flex min-h-screen flex-col bg-canvas">
-      <header className="sticky top-0 z-10 border-b border-slate-100 bg-white/90 backdrop-blur">
+      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white shadow-sm">
         <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4 sm:px-6">
           <Link to="/"><Logo /></Link>
           <nav className="ml-auto flex items-center gap-1 sm:gap-2">
