@@ -144,7 +144,8 @@ function SideNav({ items, onNavigate }: { items: NavItem[]; onNavigate?: () => v
 
 // Signed-in app: sidebar on desktop, slide-in menu on phones
 function AppShell() {
-  const { me } = useAuth();
+  const { me, logout } = useAuth();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const location = useLocation();
   useEffect(() => setOpen(false), [location.pathname]);
@@ -173,19 +174,21 @@ function AppShell() {
               </button>
             </div>
             <div className="flex-1 overflow-y-auto px-3 py-2">
-              <SideNav items={[...items, ...(items.length ? [{ to: "/security", text: "Account & privacy", icon: "lock" as IconName }] : [])]} />
+              <SideNav items={[...items, ...(items.length ? [
+                { to: "/notifications", text: "Notifications", icon: "bell" as IconName },
+                { to: "/security", text: "Account & privacy", icon: "lock" as IconName },
+              ] : [])]} />
             </div>
+            <button onClick={() => { logout(); navigate("/login"); }}
+              className="m-3 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 hover:bg-rose-50 hover:text-rose-700">
+              <Icon name="logout" className="h-[18px] w-[18px] text-slate-400" /> Log out
+            </button>
           </div>
         </div>
       )}
 
       <div className="lg:pl-64">
         <header className="no-print sticky top-0 z-10 flex h-16 items-center gap-3 border-b border-slate-100 bg-white/90 px-4 backdrop-blur sm:px-6">
-          {items.length > 0 && (
-            <button className="-ml-1 grid h-9 w-9 place-items-center rounded-lg text-slate-600 hover:bg-slate-100 lg:hidden" onClick={() => setOpen(true)} aria-label="Menu">
-              <Icon name="menu" />
-            </button>
-          )}
           <Link to="/" className="lg:hidden"><Logo /></Link>
           <div className="ml-auto flex items-center gap-1.5">
             {me && !me.must_change_password && <Bell />}
@@ -196,7 +199,7 @@ function AppShell() {
           <Outlet />
         </main>
       </div>
-      {me && !me.must_change_password && <TabBar role={me.role} />}
+      {me && !me.must_change_password && <TabBar role={me.role} onMore={() => setOpen(true)} moreOpen={open} />}
     </div>
   );
 }
@@ -207,29 +210,25 @@ const TABS: Record<Role, NavItem[]> = {
     { to: "/search", text: "Home", icon: "home" },
     { to: "/orders", text: "Orders", icon: "package" },
     { to: "/notifications", text: "Alerts", icon: "bell" },
-    { to: "/security", text: "Profile", icon: "user" },
   ],
   business: [
     { to: "/business", text: "Orders", icon: "inbox", end: true },
     { to: "/business/scan", text: "Scan", icon: "scan" },
     { to: "/notifications", text: "Alerts", icon: "bell" },
-    { to: "/business/profile", text: "Business", icon: "store" },
   ],
   driver: [
     { to: "/driver", text: "Jobs", icon: "truck", end: true },
-    { to: "/documents", text: "Documents", icon: "file" },
     { to: "/notifications", text: "Alerts", icon: "bell" },
-    { to: "/security", text: "Profile", icon: "user" },
+    { to: "/incidents", text: "Help", icon: "flag" },
   ],
   admin: [
     { to: "/admin", text: "Verify", icon: "shield", end: true },
     { to: "/admin/incidents", text: "Incidents", icon: "flag" },
     { to: "/admin/routes", text: "Routes", icon: "route" },
-    { to: "/notifications", text: "Alerts", icon: "bell" },
   ],
 };
 
-function TabBar({ role }: { role: Role }) {
+function TabBar({ role, onMore, moreOpen }: { role: Role; onMore: () => void; moreOpen: boolean }) {
   return (
     <nav aria-label="Tabs" className="no-print fixed inset-x-0 bottom-0 z-30 border-t border-slate-100 bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_20px_-8px_rgb(30_41_99/0.15)] backdrop-blur lg:hidden">
       <div className="mx-auto grid max-w-md grid-cols-4">
@@ -246,6 +245,11 @@ function TabBar({ role }: { role: Role }) {
             )}
           </NavLink>
         ))}
+        <button type="button" onClick={onMore} aria-expanded={moreOpen}
+          className={`flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium ${moreOpen ? "text-brand-600" : "text-slate-400"}`}>
+          <span className={`grid h-7 w-12 place-items-center rounded-full ${moreOpen ? "bg-brand-50" : ""}`}><Icon name="menu" className="h-5 w-5" /></span>
+          More
+        </button>
       </div>
     </nav>
   );

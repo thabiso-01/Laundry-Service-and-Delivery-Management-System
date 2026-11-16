@@ -27,6 +27,7 @@ class LaundrySearchItem(BaseModel):
     fastest_turnaround_hours: int
     rating_avg: float | None = None
     rating_count: int = 0
+    photo_url: str | None = None
     # Filled in when searching by category, so customers can compare (UR-006)
     matching_services: list[PublicServiceOut] | None = None
 
@@ -60,6 +61,7 @@ class LaundryDetail(BaseModel):
     latitude: float
     longitude: float
     distance_km: float | None
+    photo_url: str | None = None
     services: list[PublicServiceOut]
     rating_avg: float | None = None
     rating_count: int = 0

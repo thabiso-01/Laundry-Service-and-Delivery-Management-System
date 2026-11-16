@@ -45,3 +45,32 @@
 @media print {
   .no-print { display: none !important; }
 }
+
+/* Map controls in the app's style instead of Leaflet's defaults */
+.leaflet-container {
+  font-family: var(--font-sans);
+}
+.leaflet-bar.leaflet-control {
+  overflow: hidden;
+  border: 0 !important;
+  border-radius: 0.75rem !important;
+  box-shadow: var(--shadow-raised) !important;
+}
+.leaflet-bar a,
+.leaflet-bar a:hover {
+  width: 34px !important;
+  height: 34px !important;
+  line-height: 34px !important;
+  border-bottom-color: var(--color-slate-100) !important;
+  color: var(--color-slate-700) !important;
+  font-weight: 500;
+}
+.leaflet-bar a:hover {
+  background: var(--color-brand-50) !important;
+  color: var(--color-brand-700) !important;
+}
+.leaflet-control-attribution {
+  border-top-left-radius: 0.5rem;
+  background: rgb(255 255 255 / 0.8) !important;
+  font-size: 10px !important;
+}

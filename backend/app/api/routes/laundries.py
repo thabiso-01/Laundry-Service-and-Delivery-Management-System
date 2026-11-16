@@ -9,12 +9,13 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, status
+from fastapi.responses import Response
 from sqlalchemy import select
 
 from app.api.deps import DbSession
 from app.models import LaundryService, Review
 from app.models.enums import ReviewTarget, ServiceCategory
-from app.services import reviews
+from app.services import covers, reviews
 from app.schemas.business import PublicServiceOut
 from app.schemas.search import LaundryDetail, LaundrySearchItem, LaundrySearchPage, SortBy
 from app.services import search as search_service
@@ -62,6 +63,7 @@ def search_laundries(
             fastest_turnaround_hours=fastest,
             rating_avg=round(float(rating_avg), 2) if rating_avg is not None else None,
             rating_count=rating_count,
+            photo_url=covers.photo_url(b),
             matching_services=(
                 [PublicServiceOut.model_validate(s) for s in result.services[b.id]]
                 if category else None
@@ -112,7 +114,18 @@ def laundry_detail(
         latitude=business.latitude,
         longitude=business.longitude,
         distance_km=distance,
+        photo_url=covers.photo_url(business),
         services=[PublicServiceOut.model_validate(s) for s in services],
         **dict(zip(("rating_avg", "rating_count"), reviews.summary(
             db, Review.target == ReviewTarget.BUSINESS, Review.business_id == business.id))),
     )
+
+
+@router.get("/{business_id}/photo", response_class=Response,
+            responses={200: {"content": {"image/jpeg": {}, "image/png": {}}}})
+def laundry_photo(business_id: uuid.UUID, db: DbSession) -> Response:
+    """The laundry's shop photo. Only approved laundries' photos are public."""
+    business = search_service.get_bookable(db, business_id)
+    if business is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Laundry not found")
+    return covers.serve(business)

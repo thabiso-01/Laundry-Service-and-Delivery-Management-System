@@ -12,7 +12,7 @@ after approval.
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, Response, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
@@ -26,7 +26,7 @@ from app.schemas.business import (
     ServiceOut,
     ServiceUpdate,
 )
-from app.services import audit
+from app.services import audit, covers
 
 router = APIRouter(prefix="/api/business", tags=["business"])
 
@@ -44,15 +44,21 @@ DUPLICATE_NAME = "Your business already has a service with this name"
 
 # ---------- Profile ----------
 
+def _profile_out(business: BusinessProfile) -> BusinessProfileOut:
+    out = BusinessProfileOut.model_validate(business)
+    out.photo_url = covers.photo_url(business)
+    return out
+
+
 @router.get("/profile", response_model=BusinessProfileOut)
-def get_profile(staff: AnyStaff) -> BusinessProfile:
-    return staff.business
+def get_profile(staff: AnyStaff) -> BusinessProfileOut:
+    return _profile_out(staff.business)
 
 
 @router.patch("/profile", response_model=BusinessProfileOut)
 def update_profile(
     body: BusinessProfileUpdate, staff: Manager, db: DbSession, request: Request
-) -> BusinessProfile:
+) -> BusinessProfileOut:
     business = staff.business
     changes = audit.apply_changes(business, body.model_dump(exclude_unset=True))
     if changes:
@@ -60,7 +66,22 @@ def update_profile(
                      entity_type="business_profile", entity_id=business.id,
                      details=changes, request=request)
         db.commit()
-    return business
+    return _profile_out(business)
+
+
+@router.post("/profile/photo", response_model=BusinessProfileOut)
+def upload_photo(
+    staff: Manager, db: DbSession, request: Request, file: UploadFile = File(...)
+) -> BusinessProfileOut:
+    """Public shop photo (JPEG or PNG, max 5 MB). Hidden metadata such as GPS is removed."""
+    covers.upload(db, staff.business, file, staff.user, request)
+    return _profile_out(staff.business)
+
+
+@router.delete("/profile/photo", response_model=BusinessProfileOut)
+def remove_photo(staff: Manager, db: DbSession, request: Request) -> BusinessProfileOut:
+    covers.remove(db, staff.business, staff.user, request)
+    return _profile_out(staff.business)
 
 
 # ---------- Services ----------

@@ -6,8 +6,8 @@ import { useAuth } from "../../auth/AuthContext";
 import { AddressPicker, EMPTY_ADDRESS, type AddressValue } from "../../components/AddressPicker";
 import { MapView } from "../../components/MapView";
 import { Icon } from "../../components/icons";
-import { CATEGORY_INFO, coverFor } from "../../lib/categories";
-import { Alert, Button, ButtonLink, Card, Empty, Select, Spinner, Stars, TextArea } from "../../components/ui";
+import { CATEGORY_INFO } from "../../lib/categories";
+import { Alert, Button, ButtonLink, Card, CoverImage, Empty, Select, Spinner, Stars, TextArea } from "../../components/ui";
 import { DEFAULT_LOCATION, UNIT_LABEL, rands, slots, when } from "../../lib/format";
 import { useAction, useAsync } from "../../lib/useAsync";
 
@@ -65,6 +65,13 @@ export function LaundryPage() {
     };
   };
 
+  // What's still missing before we can show a price (shown under the button)
+  const missing = [
+    chosen.length === 0 && "choose at least one service",
+    (addr.latitude == null || addr.longitude == null) && "find your address or use your location",
+    addr.latitude != null && (!addr.address_line || !addr.city) && "fill in your street address and city",
+    chosen.length > 0 && !deliveryChoice && "pick a delivery time",
+  ].filter(Boolean) as string[];
   const ready = chosen.length > 0 && collectionSlot && deliveryChoice && addr.address_line && addr.city
     && addr.latitude != null && addr.longitude != null;
 
@@ -84,7 +91,7 @@ export function LaundryPage() {
     <div>
       {/* Cover photo with name and rating */}
       <section className="relative mb-6 overflow-hidden rounded-3xl shadow-raised">
-        <img src={coverFor(l.id)} alt="" className="h-56 w-full object-cover sm:h-72" />
+        <CoverImage src={l.photo_url} name={l.business_name} className="h-56 w-full sm:h-72" />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-900/30 to-transparent" />
         <Link to={`/search?lat=${lat}&lng=${lng}`} aria-label="All laundries"
           className="absolute left-4 top-4 grid h-10 w-10 place-items-center rounded-full bg-white/90 text-slate-800 shadow-sm backdrop-blur hover:bg-white">
@@ -216,7 +223,15 @@ export function LaundryPage() {
                   {quote ? (
                     <Button size="lg" className="w-full" busy={placing.busy} onClick={place}>Place order</Button>
                   ) : (
-                    <Button size="lg" variant={ready ? "primary" : "secondary"} className="w-full" busy={quoting.busy} disabled={!ready} onClick={getQuote}>See price</Button>
+                    <>
+                      <Button size="lg" className="w-full" busy={quoting.busy} disabled={!ready} onClick={getQuote}>See price</Button>
+                      {!ready && missing.length > 0 && (
+                        <p className="flex items-start gap-1.5 text-xs text-slate-500">
+                          <Icon name="info" className="mt-px h-3.5 w-3.5 shrink-0" />
+                          <span>To see the price, {missing.join(", then ")}.</span>
+                        </p>
+                      )}
+                    </>
                   )}
                   {quote && <p className="text-center text-xs text-slate-500">You'll pay on the next screen.</p>}
                   {chosen.length > 0 && !quote && (

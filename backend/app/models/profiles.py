@@ -84,6 +84,10 @@ class BusinessProfile(AddressMixin, ReviewMixin, TimestampMixin, Base):
     description: Mapped[str | None] = mapped_column(Text)
     contact_phone: Mapped[str | None] = mapped_column(String(20))
     contact_email: Mapped[str | None] = mapped_column(String(255))
+    # Public shop photo shown to customers (metadata stripped at upload)
+    cover_photo_path: Mapped[str | None] = mapped_column(String(255))
+    cover_photo_type: Mapped[str | None] = mapped_column(String(32))
+    cover_photo_updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     verified_by_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL")
     )

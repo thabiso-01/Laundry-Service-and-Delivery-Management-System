@@ -43,6 +43,7 @@ class BusinessProfileOut(BaseModel):
     longitude: float | None
     verification_status: VerificationStatus
     rejection_reason: str | None
+    photo_url: str | None = None
 
 
 class BusinessProfileUpdate(BaseModel):

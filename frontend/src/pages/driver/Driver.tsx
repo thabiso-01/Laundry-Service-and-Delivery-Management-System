@@ -6,7 +6,7 @@ import { useAuth } from "../../auth/AuthContext";
 import { Icon } from "../../components/icons";
 import { MapView } from "../../components/MapView";
 import { BagCodeField } from "../../components/QrScanner";
-import { Alert, Badge, Button, Card, Checkbox, Empty, Input, KeyValue, ListRow, PageTitle, Spinner, Stars, StatusBadge } from "../../components/ui";
+import { Alert, Badge, Button, Card, Checkbox, Empty, HeroHeader, Input, KeyValue, ListRow, PageTitle, Spinner, StatusBadge, heroButton } from "../../components/ui";
 import { DEFAULT_LOCATION, currentPosition, osmLink, rands, windowText } from "../../lib/format";
 import { useAction, useAsync } from "../../lib/useAsync";
 
@@ -62,21 +62,26 @@ export function DriverHome() {
 
   return (
     <div>
-      <PageTitle sub={<Stars value={ratings.data?.rating_avg ?? null} count={ratings.data?.rating_count} />}>Jobs</PageTitle>
-
-      {/* Online / offline */}
-      <section className={`mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border p-5 shadow-card ${online ? "border-emerald-200 bg-emerald-50/60" : "border-slate-200 bg-white"}`}>
-        <div className="flex items-center gap-3">
-          <span className={`grid h-11 w-11 place-items-center rounded-full ${online ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>
-            <Icon name="power" />
-          </span>
-          <div>
-            <p className="font-semibold text-slate-900">{online ? "You're online" : "You're offline"}</p>
-            <p className="text-sm text-slate-600">{online ? "New jobs near you appear below." : "Go online to see and accept jobs."}</p>
+      <HeroHeader title={`Hi, ${me.full_name.split(" ")[0]}!`}
+        sub={ratings.data?.rating_avg != null
+          ? <span className="inline-flex items-center gap-1"><Icon name="star" className="h-4 w-4 fill-amber-300 text-amber-300" />{ratings.data.rating_avg.toFixed(1)} from {ratings.data.rating_count} rating{ratings.data.rating_count === 1 ? "" : "s"}</span>
+          : "No ratings yet"}>
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-white/10 p-4 ring-1 ring-white/15 backdrop-blur">
+          <div className="flex items-center gap-3">
+            <span className={`grid h-11 w-11 place-items-center rounded-full ${online ? "bg-emerald-400 text-emerald-950" : "bg-white/15 text-white"}`}>
+              <Icon name="power" />
+            </span>
+            <div>
+              <p className="font-semibold">{online ? "You're online" : "You're offline"}</p>
+              <p className="text-sm text-brand-100">{online ? "New jobs near you appear below." : "Go online to see and accept jobs."}</p>
+            </div>
           </div>
+          <button type="button" className={heroButton} disabled={busy} onClick={toggle}>
+            {busy && <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />}
+            {online ? "Go offline" : "Go online"}
+          </button>
         </div>
-        <Button variant={online ? "secondary" : "primary"} size="lg" busy={busy} onClick={toggle}>{online ? "Go offline" : "Go online"}</Button>
-      </section>
+      </HeroHeader>
       <div className="mb-4 empty:hidden"><Alert>{error}</Alert></div>
 
       <div className="space-y-6">

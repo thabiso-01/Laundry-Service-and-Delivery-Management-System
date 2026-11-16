@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import type { IconName } from "../../components/icons";
+import { Icon, type IconName } from "../../components/icons";
 import { api } from "../../api/client";
 import type { Order, OrderSummary, Page } from "../../api/types";
 import { useAuth } from "../../auth/AuthContext";
 import { AuthImage, EvidenceCards, Money, OrderHeader, OrderProgress, Schedule, Timeline } from "../../components/order";
 import { BagCodeField } from "../../components/QrScanner";
-import { Alert, Button, ButtonLink, Card, Checkbox, Empty, Input, KeyValue, ListRow, PageTitle, Spinner, Stat, StatusBadge, Tabs, TextArea } from "../../components/ui";
+import { Alert, Button, ButtonLink, Card, Checkbox, Empty, HeroHeader, HeroStat, Input, KeyValue, ListRow, Spinner, StatusBadge, Tabs, TextArea, heroButton } from "../../components/ui";
 import { rands, windowText } from "../../lib/format";
 import { useAction, useAsync } from "../../lib/useAsync";
 
@@ -55,13 +55,19 @@ export function BusinessOrders() {
 
   return (
     <div>
-      <PageTitle sub={me?.business?.business_name} actions={approved && <ButtonLink to="/business/scan" variant="secondary" icon="scan">Scan a bag</ButtonLink>}>Orders</PageTitle>
+      <HeroHeader title={`Hi, ${me?.full_name.split(" ")[0]}!`}
+        sub={<span className="inline-flex items-center gap-1.5"><Icon name="store" className="h-4 w-4" />{me?.business?.business_name}</span>}
+        actions={approved && <Link to="/business/scan" className={heroButton}><Icon name="scan" className="h-4 w-4" />Scan a bag</Link>}>
+        {approved && (
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {STATS.map(([s, text, icon]) => <HeroStat key={s} label={text} value={c[s] ?? "–"} icon={icon} />)}
+          </div>
+        )}
+      </HeroHeader>
       <VerificationBanner />
       {approved && (
         <>
-          <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-            {STATS.map(([s, text, icon, tone]) => <Stat key={s} label={text} value={c[s] ?? "–"} icon={icon} tone={tone} />)}
-          </div>
+          <h2 className="mb-3 text-lg font-semibold text-slate-900">Orders</h2>
           <div className="mb-4">
             <Tabs value={tab} onChange={setTab} items={TABS.map(([name, statuses]) => ({
               label: name, count: tab === 2 ? undefined : statuses.reduce((n, s) => n + (c[s] ?? 0), 0) || undefined,

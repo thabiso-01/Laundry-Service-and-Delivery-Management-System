@@ -104,12 +104,19 @@ All demo accounts use the password **`DemoPass#2026`** (development only):
 | Log in as | Email | What to try |
 |---|---|---|
 | Customer | `customer@demo.lc` | Find a laundry → choose services → see price → place order → pay (sandbox) → show the collection code to the driver |
+| More customers | `lindiwe@`, `johan@`, `ayesha@`, `kagiso@demo.lc` | Their past orders gave the laundries their reviews |
 | Laundry owner | `owner@demo.lc` | Accept the paid order → after collection, receive the bag (copy the code under the QR label + seal numbers) → weigh → processing → ready |
 | Laundry attendant | `attendant@demo.lc` | Same order queue, no access to staff or prices |
+| More laundries | `owner2@` … `owner5@demo.lc` | Melville, Rosebank, Maboneng and Soweto, each with a shop photo (change it under *Business profile*) |
+| Waiting for approval | `driver3@demo.lc`, `owner6@demo.lc` | Show up in the admin's verification queue |
 | Driver | `driver1@demo.lc`, `driver2@demo.lc` | Go online → accept a job → collect with the customer's code and a seal number (any 4–20 letters/digits) → … |
 | Admin | `admin@demo.lc` | Verification queues, incidents with evidence, route alerts |
 
 Tip: use two browser profiles (or a private window) to be logged in as two people at once.
+
+For a clean demo (no leftovers from test runs), empty the development
+database and seed again: `docker compose down -v && docker compose up -d`, then
+`alembic upgrade head` and `python -m app.scripts.seed_demo --yes`.
 
 ## Screens
 

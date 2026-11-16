@@ -59,6 +59,7 @@ export interface LaundrySearchItem {
   fastest_turnaround_hours: number;
   rating_avg: number | null;
   rating_count: number;
+  photo_url: string | null;
   matching_services: Service[] | null;
 }
 
@@ -76,6 +77,7 @@ export interface LaundryDetail {
   services: Service[];
   rating_avg: number | null;
   rating_count: number;
+  photo_url: string | null;
 }
 
 export interface Line {

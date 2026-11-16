@@ -3,7 +3,8 @@ import { api } from "../../api/client";
 import type { Service } from "../../api/types";
 import { useAuth } from "../../auth/AuthContext";
 import { AddressPicker, type AddressValue } from "../../components/AddressPicker";
-import { Alert, Badge, Button, Card, Empty, Input, PageTitle, Select, Spinner, StatusBadge, TextArea } from "../../components/ui";
+import { Icon } from "../../components/icons";
+import { Alert, Badge, Button, Card, CoverImage, Empty, Input, PageTitle, Select, Spinner, StatusBadge, TextArea } from "../../components/ui";
 import { CATEGORIES, label, rands, when } from "../../lib/format";
 import { useAction, useAsync } from "../../lib/useAsync";
 
@@ -140,7 +141,43 @@ export function Staff() {
 
 interface Profile { business_name: string; description: string | null; contact_phone: string | null; contact_email: string | null;
   address_line: string | null; suburb: string | null; city: string | null; latitude: number | null; longitude: number | null;
-  verification_status: string; rejection_reason: string | null; registration_number: string | null }
+  verification_status: string; rejection_reason: string | null; registration_number: string | null; photo_url: string | null }
+
+// The public shop photo customers see on search results and the laundry page
+function ShopPhoto({ profile, onChange }: { profile: Profile; onChange: (p: Profile) => void }) {
+  const { busy, error, run } = useAction();
+  const upload = (file: File) => void run(async () => {
+    const form = new FormData();
+    form.set("file", file);
+    onChange(await api<Profile>("/api/business/profile/photo", { form }));
+  });
+  return (
+    <Card title="Shop photo" description="Customers see this on search results and your laundry page.">
+      <div className="grid gap-5 sm:grid-cols-[260px_1fr] sm:items-center">
+        <CoverImage src={profile.photo_url} name={profile.business_name} className="aspect-[16/10] w-full rounded-2xl" />
+        <div className="space-y-3 text-sm text-slate-600">
+          <p>Use a bright, landscape photo of your shop front or machines. JPEG or PNG, up to 5 MB.</p>
+          <p className="text-xs text-slate-500">Don't show customers' or staff members' faces without their permission (POPIA).
+            Hidden information in the file, like GPS location, is removed automatically.</p>
+          <div className="flex flex-wrap gap-2">
+            <label className={`inline-flex h-10 cursor-pointer items-center gap-2 rounded-xl bg-brand-600 px-4 font-medium text-white shadow-sm shadow-brand-600/25 hover:bg-brand-700 ${busy ? "pointer-events-none opacity-60" : ""}`}>
+              <Icon name="upload" className="h-4 w-4" /> {profile.photo_url ? "Change photo" : "Upload photo"}
+              <input type="file" accept="image/jpeg,image/png" className="sr-only" disabled={busy}
+                onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) upload(f); }} />
+            </label>
+            {profile.photo_url && (
+              <Button variant="ghost" className="text-rose-700 hover:bg-rose-50" busy={busy}
+                onClick={() => void run(async () => onChange(await api<Profile>("/api/business/profile/photo", { method: "DELETE" })))}>
+                Remove
+              </Button>
+            )}
+          </div>
+          <Alert>{error}</Alert>
+        </div>
+      </div>
+    </Card>
+  );
+}
 
 export function BusinessProfile() {
   const { data, error, loading, setData } = useAsync(() => api<Profile>("/api/business/profile"));
@@ -166,9 +203,10 @@ export function BusinessProfile() {
     setSaved(true);
   });
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-3xl space-y-5">
       <PageTitle sub={<>Verification: <StatusBadge status={data.verification_status} /> {data.registration_number && `· CIPC ${data.registration_number}`}</>}>Business profile</PageTitle>
-      <Card>
+      <ShopPhoto profile={data} onChange={setData} />
+      <Card title="Details">
         <div className="grid gap-3 sm:grid-cols-2">
           <Input label="Business name" value={data.business_name} onChange={set("business_name")} />
           <Input label="Contact phone" value={data.contact_phone ?? ""} onChange={set("contact_phone")} />

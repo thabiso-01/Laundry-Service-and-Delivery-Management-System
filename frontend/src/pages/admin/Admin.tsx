@@ -4,7 +4,7 @@ import { api, apiBlobUrl } from "../../api/client";
 import type { AdminIncident, DocumentsOverview, IncidentSummary, Page } from "../../api/types";
 import { MapView } from "../../components/MapView";
 import { AuthImage, Seals, Timeline } from "../../components/order";
-import { Alert, Badge, Button, Card, Checkbox, Empty, KeyValue, ListRow, PageTitle, Select, Spinner, Stat, StatusBadge, Tabs, TextArea } from "../../components/ui";
+import { Alert, Badge, Button, Card, Checkbox, Empty, HeroHeader, HeroStat, KeyValue, ListRow, PageTitle, Select, Spinner, StatusBadge, Tabs, TextArea } from "../../components/ui";
 
 const STATUSES = ["pending", "approved", "rejected"];
 import { label, osmLink, when } from "../../lib/format";
@@ -25,12 +25,13 @@ export function Verification() {
   const docs = useAsync(() => api<Page<{ id: string }>>("/api/admin/documents?limit=1"));
   return (
     <div>
-      <PageTitle sub="Check drivers and laundries before they can work on the platform.">Verification</PageTitle>
-      <div className="mb-6 grid gap-3 sm:grid-cols-3">
-        <Stat label="Documents to review" value={docs.data?.total ?? "–"} icon="file" tone="amber" />
-        <Stat label={`${label(status)} drivers`} value={drivers.data?.total ?? "–"} icon="truck" tone="brand" />
-        <Stat label={`${label(status)} laundries`} value={businesses.data?.total ?? "–"} icon="store" tone="violet" />
-      </div>
+      <HeroHeader title="Verification" sub="Check drivers and laundries before they can work on the platform.">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <HeroStat label="Documents to review" value={docs.data?.total ?? "–"} icon="file" />
+          <HeroStat label={`${label(status)} drivers`} value={drivers.data?.total ?? "–"} icon="truck" />
+          <HeroStat label={`${label(status)} laundries`} value={businesses.data?.total ?? "–"} icon="store" />
+        </div>
+      </HeroHeader>
       <div className="mb-4">
         <Tabs value={STATUSES.indexOf(status)} onChange={(i) => setStatus(STATUSES[i])} items={STATUSES.map((s) => ({ label: label(s) }))} />
       </div>

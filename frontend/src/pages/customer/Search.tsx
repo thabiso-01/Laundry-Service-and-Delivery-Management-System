@@ -4,8 +4,8 @@ import { api } from "../../api/client";
 import type { LaundrySearchItem, Page } from "../../api/types";
 import { useAuth } from "../../auth/AuthContext";
 import { Icon } from "../../components/icons";
-import { Alert, Card, Empty, Spinner } from "../../components/ui";
-import { CATEGORY_INFO, FEATURED_CATEGORIES, coverFor } from "../../lib/categories";
+import { Alert, Card, CoverImage, Empty, Spinner } from "../../components/ui";
+import { CATEGORY_INFO, FEATURED_CATEGORIES } from "../../lib/categories";
 import { DEFAULT_LOCATION, currentPosition } from "../../lib/format";
 import { useAsync } from "../../lib/useAsync";
 
@@ -155,7 +155,7 @@ export function Search() {
               <Link key={l.id} to={`/laundries/${l.id}?lat=${lat}&lng=${lng}`}
                 className="group flex flex-col overflow-hidden rounded-3xl bg-white p-2 shadow-card ring-1 ring-slate-100 transition hover:-translate-y-0.5 hover:shadow-raised">
                 <div className="relative h-40 overflow-hidden rounded-2xl">
-                  <img src={coverFor(l.id)} alt="" loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+                  <CoverImage src={l.photo_url} name={l.business_name} className="h-full w-full transition duration-500 group-hover:scale-105" />
                   {l.rating_avg != null && (
                     <span className="absolute left-2.5 top-2.5 inline-flex items-center gap-1 rounded-full bg-white/95 px-2 py-0.5 text-xs font-semibold text-slate-800 shadow-sm">
                       <Icon name="star" className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />{l.rating_avg.toFixed(1)}
