@@ -58,10 +58,10 @@ export function Landing() {
           </div>
 
           {/* Preview of an order */}
-          <div className="relative mx-auto w-full max-w-md pb-36 sm:pb-20 lg:ml-auto lg:max-w-[25rem] lg:pb-16">
+          <div className="relative mx-auto w-full max-w-md lg:ml-auto">
             <img src="/images/hero-linen.jpg" alt="Freshly washed linen, neatly folded" width={800} height={1422}
-              className="aspect-[4/5] w-full rounded-3xl object-cover object-bottom shadow-raised lg:aspect-square" fetchPriority="high" />
-            <div className="absolute inset-x-3 bottom-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-raised sm:inset-x-auto sm:-left-12 sm:w-[21rem]">
+              className="aspect-[4/5] w-full rounded-3xl object-cover object-bottom shadow-raised sm:aspect-square" fetchPriority="high" />
+            <div className="absolute inset-x-4 bottom-4 rounded-2xl border border-white/60 bg-white/95 p-4 shadow-raised backdrop-blur sm:inset-x-5 sm:bottom-5">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-xs font-medium text-slate-500">Order LC-7K2M9QX4</p>
