@@ -39,7 +39,7 @@ export function Landing() {
 
       {/* Hero */}
       <section className="relative overflow-hidden bg-gradient-to-b from-brand-50 to-slate-50">
-        <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-14 sm:px-6 sm:py-20 lg:grid-cols-2">
+        <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-14 sm:px-6 sm:py-20 lg:grid-cols-2 lg:py-10">
           <div>
             <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-medium text-brand-800 shadow-sm ring-1 ring-brand-100">
               <Icon name="pin" className="h-3.5 w-3.5" /> Now serving Johannesburg
@@ -58,30 +58,43 @@ export function Landing() {
           </div>
 
           {/* Preview of an order */}
-          <div className="relative mx-auto w-full max-w-md pb-40 sm:pb-24 lg:ml-auto lg:pb-10">
+          <div className="relative mx-auto w-full max-w-md pb-36 sm:pb-20 lg:ml-auto lg:max-w-[25rem] lg:pb-16">
             <img src="/images/hero-linen.jpg" alt="Freshly washed linen, neatly folded" width={800} height={1422}
-              className="aspect-[4/5] w-full rounded-3xl object-cover object-bottom shadow-raised" fetchPriority="high" />
-            <div className="absolute inset-x-4 bottom-0 rounded-2xl border border-slate-200 bg-white/95 p-5 shadow-raised backdrop-blur sm:inset-x-auto sm:-left-16 sm:w-80">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-mono text-sm font-semibold">LC-7K2M9QX4</p>
-                  <p className="text-xs text-slate-500">Braam Fresh Laundry</p>
+              className="aspect-[4/5] w-full rounded-3xl object-cover object-bottom shadow-raised lg:aspect-square" fetchPriority="high" />
+            <div className="absolute inset-x-3 bottom-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-raised sm:inset-x-auto sm:-left-12 sm:w-[21rem]">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-slate-500">Order LC-7K2M9QX4</p>
+                  <p className="truncate font-semibold text-slate-900">Braam Fresh Laundry</p>
                 </div>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-50 px-2 py-0.5 text-xs font-medium text-violet-700 ring-1 ring-violet-600/20 ring-inset">
+                <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-violet-50 px-2.5 py-1 text-xs font-medium text-violet-700 ring-1 ring-violet-600/20 ring-inset">
                   <span className="h-1.5 w-1.5 rounded-full bg-violet-500" /> On the way
                 </span>
               </div>
-              <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full w-[85%] rounded-full bg-brand-600" /></div>
-              <ul className="mt-4 space-y-2.5 text-sm">
-                {["Collected from you · code confirmed", "Checked in at the laundry · seal intact", "Washed, dried and folded", "Out for delivery with Sipho"].map((t, i) => (
-                  <li key={t} className="flex items-center gap-3">
-                    <span className={`grid h-6 w-6 place-items-center rounded-full ${i < 3 ? "bg-emerald-50 text-emerald-600" : "bg-brand-50 text-brand-700"}`}>
-                      <Icon name={i < 3 ? "check" : "truck"} className="h-3.5 w-3.5" />
+              <div className="mt-3 flex items-center gap-3">
+                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100"><div className="h-full w-[85%] rounded-full bg-brand-600" /></div>
+                <span className="text-xs font-medium text-slate-500">Step 7 of 8</span>
+              </div>
+              <ul className="mt-3 space-y-2 text-sm">
+                {[["Collected · code confirmed", "09:12"], ["Checked in · seal intact", "10:05"], ["Washed, dried and folded", "15:40"]].map(([t, time]) => (
+                  <li key={t} className="flex items-center gap-2.5">
+                    <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-emerald-50 text-emerald-600">
+                      <Icon name="check" className="h-3 w-3" />
                     </span>
-                    <span className={i < 3 ? "text-slate-600" : "font-medium text-slate-900"}>{t}</span>
+                    <span className="flex-1 truncate text-slate-600">{t}</span>
+                    <span className="font-mono text-xs text-slate-400">{time}</span>
                   </li>
                 ))}
               </ul>
+              <div className="mt-3 flex items-center gap-3 rounded-xl bg-brand-50 px-3 py-2.5">
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand-600 text-white">
+                  <Icon name="truck" className="h-4 w-4" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-slate-900">Sipho is on the way</p>
+                  <p className="text-xs text-slate-600">Arriving around 17:30</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
