@@ -5,6 +5,7 @@ import type { Doc, DocumentsOverview, Incident, IncidentSummary, Notification, O
 import { useAuth } from "../auth/AuthContext";
 import { Alert, Button, ButtonLink, Card, Checkbox, Empty, Input, ListRow, PageTitle, Select, Spinner, StatusBadge, TextArea } from "../components/ui";
 import { Icon, type IconName } from "../components/icons";
+import { SelfieCamera } from "../components/SelfieCamera";
 import { label, when } from "../lib/format";
 import { useAction, useAsync } from "../lib/useAsync";
 
@@ -113,6 +114,7 @@ function ViewLink({ id }: { id: string }) {
 function RequirementCard({ req, docs, onDone }: { req: Requirement; docs: Doc[]; onDone: () => Promise<void> }) {
   const { busy, error, setError, run } = useAction();
   const [type, setType] = useState(req.accepted_types[0]);
+  const [camera, setCamera] = useState(false);
   const current = docs.find((d) => d.id === req.document_id) ?? null;
   const info = DOC_INFO[current?.document_type ?? type] ?? { icon: "file" as IconName, hint: "" };
   const state = STATE[req.status];
@@ -171,17 +173,27 @@ function RequirementCard({ req, docs, onDone }: { req: Requirement; docs: Doc[];
               ))}
             </div>
           )}
-          <label htmlFor={inputId}
-            className={`inline-flex h-10 cursor-pointer items-center gap-2 rounded-xl px-4 text-sm font-medium shadow-sm ${current ? "border border-slate-200 bg-surface text-slate-800 hover:bg-slate-50" : "bg-brand-600 text-white shadow-brand-600/25 hover:bg-deep"} ${busy ? "pointer-events-none opacity-60" : ""}`}>
-            <Icon name={busy ? "clock" : info.selfie ? "camera" : "upload"} className="h-4 w-4" />
-            {busy ? "Uploading…" : current ? "Upload a new one" : info.selfie ? "Take or upload a selfie" : "Upload file"}
-          </label>
-          <input id={inputId} type="file" className="sr-only" disabled={busy}
-            accept="image/jpeg,image/png,application/pdf" capture={info.selfie ? "user" : undefined}
-            onChange={(e) => { pick(e.target.files?.[0]); e.target.value = ""; }} />
+          {info.selfie ? (
+            // Selfies are taken live with the camera; no file upload
+            <Button icon={busy ? "clock" : "camera"} variant={current ? "secondary" : "primary"} busy={busy} onClick={() => setCamera(true)}>
+              {busy ? "Uploading…" : current ? "Take a new selfie" : "Take selfie"}
+            </Button>
+          ) : (
+            <>
+              <label htmlFor={inputId}
+                className={`inline-flex h-10 cursor-pointer items-center gap-2 rounded-xl px-4 text-sm font-medium shadow-sm ${current ? "border border-slate-200 bg-surface text-slate-800 hover:bg-slate-50" : "bg-brand-600 text-white shadow-brand-600/25 hover:bg-deep"} ${busy ? "pointer-events-none opacity-60" : ""}`}>
+                <Icon name={busy ? "clock" : "upload"} className="h-4 w-4" />
+                {busy ? "Uploading…" : current ? "Upload a new one" : "Upload file"}
+              </label>
+              <input id={inputId} type="file" className="sr-only" disabled={busy}
+                accept="image/jpeg,image/png,application/pdf"
+                onChange={(e) => { pick(e.target.files?.[0]); e.target.value = ""; }} />
+            </>
+          )}
         </div>
       )}
       {error && <div className="mt-3"><Alert>{error}</Alert></div>}
+      {camera && <SelfieCamera onClose={() => setCamera(false)} onUse={(photo) => { setCamera(false); pick(photo); }} />}
     </li>
   );
 }
