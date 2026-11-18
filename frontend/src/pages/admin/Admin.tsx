@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api, apiBlobUrl } from "../../api/client";
-import type { AdminIncident, DocumentsOverview, IncidentSummary, Page } from "../../api/types";
+import type { AdminIncident, Doc, DocumentsOverview, Requirement, IncidentSummary, Page } from "../../api/types";
+import { Icon } from "../../components/icons";
 import { MapView } from "../../components/MapView";
 import { AuthImage, Seals, Timeline } from "../../components/order";
 import { Alert, Badge, Button, Card, Checkbox, Empty, HeroHeader, HeroStat, KeyValue, ListRow, PageTitle, Select, Spinner, StatusBadge, Tabs, TextArea } from "../../components/ui";
@@ -75,58 +76,187 @@ export function Verification() {
   );
 }
 
+// ---------- Reviewing one driver or laundry ----------
+
+const DOC_NAME: Record<string, string> = { national_id: "SA ID", passport: "Passport", drivers_licence: "Driver's licence" };
+const docName = (t: string) => DOC_NAME[t] ?? label(t);
+const isPdf = (d: Doc) => d.original_filename.toLowerCase().endsWith(".pdf");
+
 function DocumentReview({ overview, reload }: { overview: DocumentsOverview; reload: () => Promise<void> }) {
-  const { busy, error, run } = useAction();
-  const decide = (id: string, approve: boolean) => {
-    const reason = approve ? null : prompt("Why is this document rejected? (shown to the user)");
-    if (!approve && (!reason || reason.length < 5)) return;
-    void run(async () => {
-      await api(`/api/admin/documents/${id}/${approve ? "approve" : "reject"}`, { json: approve ? {} : { reason } });
-      await reload();
-    });
-  };
+  const current = new Set(overview.requirements.map((r) => r.document_id).filter(Boolean));
+  const older = overview.documents.filter((d) => !current.has(d.id));
   return (
-    <Card title="Documents">
-      <ul className="mb-3 flex flex-wrap gap-2 text-sm">
-        {overview.requirements.map((r) => <li key={r.name} className="rounded-lg border border-slate-200 px-2 py-1">{r.name} <StatusBadge status={r.status} /></li>)}
+    <Card title="Documents" description="Open each document, check it, then approve or reject it. Every time you open one, it's recorded in the audit log (POPIA)." padded={false}>
+      <ul className="divide-y divide-slate-100">
+        {overview.requirements.map((r) => (
+          <DocumentRow key={r.name} req={r} doc={overview.documents.find((d) => d.id === r.document_id) ?? null} reload={reload} />
+        ))}
       </ul>
-      {!overview.documents.length ? <Empty>Nothing uploaded yet.</Empty> : (
-        <ul className="divide-y divide-slate-100 text-sm">
-          {overview.documents.map((d) => (
-            <li key={d.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
-              <span>{label(d.document_type)} · {when(d.uploaded_at)} <StatusBadge status={d.status} /></span>
-              <span className="flex gap-2">
-                <Button variant="ghost" onClick={async () => window.open(await apiBlobUrl(`/api/admin/documents/${d.id}/file`), "_blank")}>View</Button>
-                {d.status !== "approved" && <Button variant="secondary" busy={busy} onClick={() => decide(d.id, true)}>Approve</Button>}
-                {d.status !== "rejected" && <Button variant="ghost" busy={busy} onClick={() => decide(d.id, false)}>Reject</Button>}
-              </span>
-            </li>
-          ))}
-        </ul>
+      {older.length > 0 && (
+        <details className="group border-t border-slate-100">
+          <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-medium text-slate-600 sm:px-5">
+            Older uploads ({older.length})
+            <Icon name="chevronRight" className="h-4 w-4 text-slate-400 transition group-open:rotate-90" />
+          </summary>
+          <ul className="divide-y divide-slate-100 border-t border-slate-100 px-4 sm:px-5">
+            {older.map((d) => (
+              <li key={d.id} className="flex flex-wrap items-center justify-between gap-2 py-2.5 text-sm">
+                <span className="text-slate-700">{docName(d.document_type)} · {when(d.uploaded_at)}</span>
+                <StatusBadge status={d.status} />
+              </li>
+            ))}
+          </ul>
+        </details>
       )}
-      <p className="mt-2 text-xs text-slate-500">Each time you open a document it's recorded in the audit log (POPIA).</p>
-      <Alert>{error}</Alert>
     </Card>
   );
 }
 
-function AccountDecision({ base, status, userId, reload }: { base: string; status: string; userId?: string; reload: () => Promise<void> }) {
-  const [reason, setReason] = useState("");
+function DocumentRow({ req, doc, reload }: { req: Requirement; doc: Doc | null; reload: () => Promise<void> }) {
   const { busy, error, run } = useAction();
+  const [open, setOpen] = useState(false);
+  const [rejecting, setRejecting] = useState(false);
+  const [reason, setReason] = useState("");
+
+  const decide = (approve: boolean) => void run(async () => {
+    await api(`/api/admin/documents/${doc!.id}/${approve ? "approve" : "reject"}`, { json: approve ? {} : { reason } });
+    setRejecting(false);
+    setReason("");
+    await reload();
+  });
+  const view = async () => {
+    if (isPdf(doc!)) window.open(await apiBlobUrl(`/api/admin/documents/${doc!.id}/file`), "_blank");
+    else setOpen((o) => !o);
+  };
+
+  return (
+    <li className="px-4 py-4 sm:px-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="font-medium text-slate-900">{req.name}</p>
+          <p className="mt-0.5 text-sm text-slate-500">
+            {doc ? <>{req.accepted_types.length > 1 && `${docName(doc.document_type)} · `}Uploaded {when(doc.uploaded_at)}</> : "Not uploaded yet"}
+          </p>
+          {doc?.status === "rejected" && doc.review_notes && <p className="mt-1 text-sm text-rose-700">Rejected: {doc.review_notes}</p>}
+        </div>
+        <StatusBadge status={req.status} />
+      </div>
+
+      {doc && (
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <Button variant="secondary" size="sm" icon={isPdf(doc) ? "file" : "search"} onClick={() => void view()}>
+            {isPdf(doc) ? "Open PDF" : open ? "Hide photo" : "View photo"}
+          </Button>
+          {doc.status === "pending" && !rejecting && (
+            <>
+              <Button size="sm" icon="check" busy={busy} onClick={() => decide(true)}>Approve</Button>
+              <Button size="sm" variant="ghost" onClick={() => setRejecting(true)}>Reject</Button>
+            </>
+          )}
+        </div>
+      )}
+
+      {open && doc && !isPdf(doc) && (
+        <div className="mt-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+          <AuthImage path={`/api/admin/documents/${doc.id}/file`} alt={`${req.name} of the applicant`} className="mx-auto max-h-[28rem] w-auto object-contain" />
+        </div>
+      )}
+
+      {rejecting && (
+        <div className="mt-3 space-y-2 rounded-xl border border-rose-200 bg-rose-50 p-3">
+          <TextArea label="Why is it rejected? The applicant sees this." value={reason} onChange={(e) => setReason(e.target.value)}
+            placeholder="For example: the photo is blurry, please upload a sharper one." rows={2} />
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" variant="danger" busy={busy} disabled={reason.trim().length < 5} onClick={() => decide(false)}>Reject document</Button>
+            <Button size="sm" variant="ghost" onClick={() => { setRejecting(false); setReason(""); }}>Cancel</Button>
+          </div>
+        </div>
+      )}
+      {error && <div className="mt-2"><Alert>{error}</Alert></div>}
+    </li>
+  );
+}
+
+function AccountDecision({ base, kind, status, userId, docs, reload }: {
+  base: string; kind: "driver" | "laundry"; status: string; userId?: string; docs: DocumentsOverview | null; reload: () => Promise<void>;
+}) {
+  const [reason, setReason] = useState("");
+  const [done, setDone] = useState<string | null>(null);
+  const { busy, error, run } = useAction();
+  const waiting = docs?.requirements.filter((r) => r.status !== "approved").map((r) => r.name) ?? [];
+  const ready = docs !== null && waiting.length === 0;
+  const act = (fn: () => Promise<unknown>, message: string) => void run(async () => {
+    await fn();
+    setReason("");
+    setDone(message);
+    await reload();
+  });
+
   return (
     <Card title="Decision">
-      <div className="space-y-3">
-        {status !== "approved" && <Button busy={busy} onClick={() => void run(async () => { await api(`${base}/approve`, { method: "POST" }); await reload(); })}>Approve</Button>}
-        <TextArea label="Reason (needed to reject or suspend)" value={reason} onChange={(e) => setReason(e.target.value)} />
-        <div className="flex flex-wrap gap-2">
-          {status !== "rejected" && <Button variant="danger" busy={busy} disabled={reason.length < 5}
-            onClick={() => void run(async () => { await api(`${base}/reject`, { json: { reason } }); await reload(); })}>{status === "approved" ? "Revoke approval" : "Reject"}</Button>}
-          {userId && <Button variant="secondary" busy={busy} disabled={reason.length < 5}
-            onClick={() => void run(async () => { await api(`/api/admin/users/${userId}/suspend`, { json: { reason } }); alert("Account suspended."); })}>Suspend account</Button>}
+      <div className="space-y-4">
+        {status === "approved" ? (
+          <Alert kind="success">This {kind} is approved and can work on the platform.</Alert>
+        ) : ready ? (
+          <Alert kind="success">All documents are approved. You can approve this {kind}.</Alert>
+        ) : (
+          <Alert kind="info" title="Can't approve yet">
+            These documents still need to be approved: {waiting.join(", ")}.
+          </Alert>
+        )}
+        {status !== "approved" && (
+          <Button className="w-full" icon="check" busy={busy} disabled={!ready}
+            onClick={() => act(() => api(`${base}/approve`, { method: "POST" }), `The ${kind} is approved and has been notified.`)}>
+            Approve {kind}
+          </Button>
+        )}
+
+        <div className="border-t border-slate-100 pt-4">
+          <p className="text-sm font-medium text-slate-900">{status === "approved" ? "Revoke or suspend" : "Reject or suspend"}</p>
+          <p className="mt-0.5 text-sm text-slate-500">Give a reason. The {kind} sees it.</p>
+          <div className="mt-2 space-y-2">
+            <TextArea label="Reason" value={reason} onChange={(e) => setReason(e.target.value)} rows={2} />
+            <div className="flex flex-wrap gap-2">
+              {status !== "rejected" && (
+                <Button variant="danger" size="sm" busy={busy} disabled={reason.trim().length < 5}
+                  onClick={() => act(() => api(`${base}/reject`, { json: { reason } }), status === "approved" ? "Approval revoked." : `The ${kind} has been rejected.`)}>
+                  {status === "approved" ? "Revoke approval" : `Reject ${kind}`}
+                </Button>
+              )}
+              {userId && (
+                <Button variant="secondary" size="sm" busy={busy} disabled={reason.trim().length < 5}
+                  onClick={() => act(() => api(`/api/admin/users/${userId}/suspend`, { json: { reason } }), "The account is suspended.")}>
+                  Suspend account
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
+        {done && <Alert kind="success">{done}</Alert>}
         <Alert>{error}</Alert>
       </div>
     </Card>
+  );
+}
+
+function ReviewLayout({ title, status, registered, details, docs, decision }: {
+  title: string; status: string; registered: string; details: [string, ReactNode][];
+  docs: ReturnType<typeof useAsync<DocumentsOverview>>; decision: ReactNode;
+}) {
+  return (
+    <div>
+      <PageTitle back={{ to: "/admin", label: "Verification" }} sub={`Signed up ${when(registered)}`}
+        actions={<StatusBadge status={status} />}>{title}</PageTitle>
+      <div className="grid items-start gap-5 lg:grid-cols-[1fr_22rem]">
+        <div className="min-w-0">
+          {docs.loading && !docs.data ? <Spinner /> : docs.data ? <DocumentReview overview={docs.data} reload={docs.reload} /> : <Alert>{docs.error}</Alert>}
+        </div>
+        <div className="space-y-5 lg:sticky lg:top-24">
+          <Card title="Details"><KeyValue items={details} /></Card>
+          {decision}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -134,18 +264,19 @@ export function AdminDriver() {
   const { id } = useParams();
   const driver = useAsync(() => api<DriverReview>(`/api/admin/drivers/${id}`), [id]);
   const docs = useAsync(() => api<DocumentsOverview>(`/api/admin/drivers/${id}/documents`), [id]);
-  if (driver.loading) return <Spinner />;
+  if (driver.loading && !driver.data) return <Spinner />;
   if (!driver.data) return <Alert>{driver.error}</Alert>;
   const d = driver.data;
   const reload = async () => { await driver.reload(); await docs.reload(); };
+  const details: [string, ReactNode][] = [
+    ["Email", d.email], ["Phone", d.phone], ["ID / passport no.", d.id_number],
+    ["Vehicle", d.vehicle_type ? [label(d.vehicle_type), d.vehicle_registration].filter(Boolean).join(" · ") : "None"],
+  ];
+  if (d.rejection_reason) details.push(["Last reason", d.rejection_reason]);
   return (
-    <div className="space-y-4">
-      <PageTitle sub={<StatusBadge status={d.verification_status} />}>{d.full_name}</PageTitle>
-      <Card><KeyValue items={[["Email", d.email], ["Phone", d.phone], ["ID / passport", d.id_number],
-        ["Vehicle", [d.vehicle_type, d.vehicle_registration].filter(Boolean).join(" · ")], ["Rejection reason", d.rejection_reason]]} /></Card>
-      {docs.data && <DocumentReview overview={docs.data} reload={reload} />}
-      <AccountDecision base={`/api/admin/drivers/${d.user_id}`} status={d.verification_status} userId={d.user_id} reload={reload} />
-    </div>
+    <ReviewLayout title={d.full_name} status={d.verification_status} registered={d.registered_at} details={details} docs={docs}
+      decision={<AccountDecision base={`/api/admin/drivers/${d.user_id}`} kind="driver" status={d.verification_status}
+        userId={d.user_id} docs={docs.data} reload={reload} />} />
   );
 }
 
@@ -153,18 +284,19 @@ export function AdminBusiness() {
   const { id } = useParams();
   const biz = useAsync(() => api<BusinessReview>(`/api/admin/businesses/${id}`), [id]);
   const docs = useAsync(() => api<DocumentsOverview>(`/api/admin/businesses/${id}/documents`), [id]);
-  if (biz.loading) return <Spinner />;
+  if (biz.loading && !biz.data) return <Spinner />;
   if (!biz.data) return <Alert>{biz.error}</Alert>;
   const b = biz.data;
   const reload = async () => { await biz.reload(); await docs.reload(); };
+  const details: [string, ReactNode][] = [
+    ["Owner", b.owner_name], ["Owner email", b.owner_email], ["CIPC number", b.registration_number],
+    ["Address", [b.address_line, b.suburb, b.city].filter(Boolean).join(", ")], ["Phone", b.contact_phone],
+  ];
+  if (b.rejection_reason) details.push(["Last reason", b.rejection_reason]);
   return (
-    <div className="space-y-4">
-      <PageTitle sub={<StatusBadge status={b.verification_status} />}>{b.business_name}</PageTitle>
-      <Card><KeyValue items={[["Owner", `${b.owner_name} · ${b.owner_email}`], ["CIPC number", b.registration_number],
-        ["Address", [b.address_line, b.suburb, b.city].filter(Boolean).join(", ")], ["Phone", b.contact_phone], ["Rejection reason", b.rejection_reason]]} /></Card>
-      {docs.data && <DocumentReview overview={docs.data} reload={reload} />}
-      <AccountDecision base={`/api/admin/businesses/${b.id}`} status={b.verification_status} reload={reload} />
-    </div>
+    <ReviewLayout title={b.business_name} status={b.verification_status} registered={b.registered_at} details={details} docs={docs}
+      decision={<AccountDecision base={`/api/admin/businesses/${b.id}`} kind="laundry" status={b.verification_status}
+        docs={docs.data} reload={reload} />} />
   );
 }
 
