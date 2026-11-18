@@ -111,6 +111,7 @@ All demo accounts use the password **`DemoPass#2026`** (development only):
 | Waiting for approval | `driver3@demo.lc`, `owner6@demo.lc` | Show up in the admin's verification queue |
 | Driver | `driver1@demo.lc`, `driver2@demo.lc` | Go online → accept a job → collect with the customer's code and a seal number (any 4–20 letters/digits) → … |
 | Admin | `admin@demo.lc` | Verification queues, incidents with evidence, route alerts |
+| More admins | `admin2@demo.lc`, `admin3@demo.lc` | Same access as `admin@demo.lc` |
 
 Tip: use two browser profiles (or a private window) to be logged in as two people at once.
 

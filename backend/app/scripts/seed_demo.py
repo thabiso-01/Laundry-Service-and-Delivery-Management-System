@@ -5,6 +5,7 @@
 
 Creates (skipping anything that already exists), all with password DemoPass#2026:
     admin@demo.lc        administrator
+    admin2@demo.lc, admin3@demo.lc   more administrators
     customer@demo.lc     customer (Marshalltown, Johannesburg) – used by the e2e tests
     lindiwe@demo.lc, johan@demo.lc, ayesha@demo.lc, kagiso@demo.lc   more customers
     owner@demo.lc        owner of "Braam Fresh Laundry" – approved, with services
@@ -134,6 +135,8 @@ def main() -> int:
             return u
 
         user("admin@demo.lc", "Ayanda Admin", UserRole.ADMIN)
+        user("admin2@demo.lc", "Lerato Admin", UserRole.ADMIN)
+        user("admin3@demo.lc", "Sipho Admin", UserRole.ADMIN)
 
         for email, name, phone, street, suburb, lat, lng in CUSTOMERS:
             if c := user(email, name, UserRole.CUSTOMER, phone):
