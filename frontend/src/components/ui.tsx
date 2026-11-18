@@ -14,9 +14,9 @@ import { Icon, type IconName } from "./icons";
 
 type Variant = "primary" | "secondary" | "danger" | "ghost";
 const VARIANTS: Record<Variant, string> = {
-  primary: "bg-brand-600 text-white shadow-sm shadow-brand-600/25 hover:bg-brand-700 disabled:bg-brand-300 disabled:shadow-none",
-  secondary: "bg-white text-slate-800 ring-1 ring-inset ring-slate-300 shadow-sm hover:bg-slate-50 disabled:text-slate-400",
-  danger: "bg-rose-600 text-white shadow-sm hover:bg-rose-700 disabled:bg-rose-300",
+  primary: "bg-brand-600 text-white shadow-sm shadow-brand-600/25 hover:bg-deep disabled:bg-brand-300 disabled:shadow-none",
+  secondary: "bg-surface text-slate-800 ring-1 ring-inset ring-slate-300 shadow-sm hover:bg-slate-50 disabled:text-slate-400",
+  danger: "bg-rose-600 text-white shadow-sm hover:bg-rose-deep disabled:bg-rose-300",
   ghost: "text-brand-700 hover:bg-brand-50 disabled:text-slate-400",
 };
 const SIZES = { sm: "h-8 rounded-lg px-3 text-sm", md: "h-10 rounded-xl px-4 text-sm", lg: "h-12 rounded-full px-6 text-base" };
@@ -67,7 +67,7 @@ function Field({ label, hint, children }: { label?: string; hint?: ReactNode; ch
 }
 
 const control =
-  "block w-full rounded-xl border-0 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 outline-none placeholder:text-slate-400 transition focus:ring-2 focus:ring-brand-600 disabled:bg-slate-50 disabled:text-slate-500";
+  "block w-full rounded-xl border-0 bg-surface px-3.5 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 outline-none placeholder:text-slate-400 transition focus:ring-2 focus:ring-brand-600 disabled:bg-slate-50 disabled:text-slate-500";
 
 export function Input({ label, hint, className = "", ...rest }: InputHTMLAttributes<HTMLInputElement> & { label?: string; hint?: ReactNode }) {
   return (
@@ -126,7 +126,7 @@ export function Card({ title, description, actions, children, className = "", pa
   padded?: boolean;
 }) {
   return (
-    <section className={`rounded-2xl border border-slate-100 bg-white shadow-card ${className}`}>
+    <section className={`rounded-2xl border border-slate-100 bg-surface shadow-card ${className}`}>
       {(title || actions) && (
         <header className="flex flex-wrap items-start justify-between gap-2 border-b border-slate-100 px-4 py-3.5 sm:px-5">
           <div className="min-w-0">
@@ -303,7 +303,7 @@ export function Stat({ label, value, icon, tone = "slate" }: { label: string; va
     violet: "bg-violet-50 text-violet-700", emerald: "bg-emerald-50 text-emerald-700",
   };
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-white p-4 shadow-card">
+    <div className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-surface p-4 shadow-card">
       {icon && <span className={`grid h-11 w-11 place-items-center rounded-full ${tones[tone]}`}><Icon name={icon} /></span>}
       <div>
         <p className="text-xs font-medium text-slate-500">{label}</p>
@@ -316,12 +316,12 @@ export function Stat({ label, value, icon, tone = "slate" }: { label: string; va
 // Segmented tabs
 export function Tabs({ items, value, onChange }: { items: { label: string; count?: number }[]; value: number; onChange: (i: number) => void }) {
   return (
-    <div role="tablist" className="inline-flex rounded-full bg-white p-1 shadow-card ring-1 ring-slate-100">
+    <div role="tablist" className="inline-flex rounded-full bg-surface p-1 shadow-card ring-1 ring-slate-100">
       {items.map((t, i) => (
         <button key={t.label} role="tab" aria-selected={value === i} onClick={() => onChange(i)}
           className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition ${value === i ? "bg-brand-600 text-white shadow-sm" : "text-slate-600 hover:text-slate-900"}`}>
           {t.label}
-          {t.count != null && t.count > 0 && <span className="rounded-full bg-white/25 px-1.5 text-xs">{t.count}</span>}
+          {t.count != null && t.count > 0 && <span className="rounded-full bg-surface/25 px-1.5 text-xs">{t.count}</span>}
         </button>
       ))}
     </div>
@@ -333,9 +333,9 @@ export function CoverImage({ src, name, className = "" }: { src: string | null |
   if (src) return <img src={src} alt={`${name} shop`} loading="lazy" className={`object-cover ${className}`} />;
   const initials = name.split(/\s+/).filter((w) => /^[A-Za-z]/.test(w)).slice(0, 2).map((w) => w[0]!.toUpperCase()).join("");
   return (
-    <div aria-hidden className={`relative grid place-items-center overflow-hidden bg-gradient-to-br from-brand-400 via-brand-500 to-brand-700 ${className}`}>
-      <div className="absolute -right-8 -top-10 h-40 w-40 rounded-full bg-white/10" />
-      <div className="absolute -bottom-12 -left-6 h-32 w-32 rounded-full bg-white/10" />
+    <div aria-hidden className={`relative grid place-items-center overflow-hidden bg-gradient-to-br from-brand-400 via-brand-500 to-deep ${className}`}>
+      <div className="absolute -right-8 -top-10 h-40 w-40 rounded-full bg-surface/10" />
+      <div className="absolute -bottom-12 -left-6 h-32 w-32 rounded-full bg-surface/10" />
       <span className="relative text-4xl font-semibold tracking-tight text-white/90">{initials}</span>
     </div>
   );
@@ -344,13 +344,13 @@ export function CoverImage({ src, name, className = "" }: { src: string | null |
 // Blue app-style header at the top of each role's home screen
 export function HeroHeader({ title, sub, actions, children }: { title: ReactNode; sub?: ReactNode; actions?: ReactNode; children?: ReactNode }) {
   return (
-    <section className="relative mb-6 overflow-hidden rounded-3xl bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 p-5 text-white shadow-raised sm:p-7">
-      <div aria-hidden className="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-white/10" />
-      <div aria-hidden className="pointer-events-none absolute -bottom-24 right-24 h-48 w-48 rounded-full bg-white/5" />
+    <section className="relative mb-6 overflow-hidden rounded-3xl bg-gradient-to-br from-brand-500 via-brand-600 to-deep p-5 text-white shadow-raised sm:p-7">
+      <div aria-hidden className="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-surface/10" />
+      <div aria-hidden className="pointer-events-none absolute -bottom-24 right-24 h-48 w-48 rounded-full bg-surface/5" />
       <div className="relative flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
-          {sub && <div className="mt-1 text-sm text-brand-100">{sub}</div>}
+          {sub && <div className="mt-1 text-sm text-white/85">{sub}</div>}
         </div>
         {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
       </div>
@@ -362,11 +362,11 @@ export function HeroHeader({ title, sub, actions, children }: { title: ReactNode
 // A number on the blue header
 export function HeroStat({ label, value, icon }: { label: string; value: ReactNode; icon: IconName }) {
   return (
-    <div className="flex items-center gap-3 rounded-2xl bg-white/10 p-3.5 ring-1 ring-white/15 backdrop-blur">
-      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/15"><Icon name={icon} className="h-5 w-5" /></span>
+    <div className="flex items-center gap-3 rounded-2xl bg-surface/10 p-3.5 ring-1 ring-white/15 backdrop-blur">
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-surface/15"><Icon name={icon} className="h-5 w-5" /></span>
       <div className="min-w-0">
         <p className="text-xl font-semibold leading-tight">{value}</p>
-        <p className="truncate text-xs text-brand-100">{label}</p>
+        <p className="truncate text-xs text-white/85">{label}</p>
       </div>
     </div>
   );
@@ -374,4 +374,4 @@ export function HeroStat({ label, value, icon }: { label: string; value: ReactNo
 
 // White button for use on the blue header
 export const heroButton =
-  "inline-flex h-10 items-center gap-2 rounded-full bg-white px-4 text-sm font-semibold text-brand-700 shadow-sm transition hover:bg-brand-50 disabled:opacity-70";
+  "inline-flex h-10 items-center gap-2 rounded-full bg-surface px-4 text-sm font-semibold text-brand-700 shadow-sm transition hover:bg-brand-50 disabled:opacity-70";

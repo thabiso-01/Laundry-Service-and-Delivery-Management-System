@@ -98,7 +98,7 @@ export function Notifications() {
         <ul className="space-y-2">
           {data.items.map((n) => (
             <li key={n.id}>
-              <button onClick={() => void open(n)} className={`w-full rounded-xl border p-3 text-left ${n.read_at ? "border-slate-200 bg-white" : "border-brand-200 bg-brand-50"}`}>
+              <button onClick={() => void open(n)} className={`w-full rounded-xl border p-3 text-left ${n.read_at ? "border-slate-200 bg-surface" : "border-brand-200 bg-brand-50"}`}>
                 <p className="font-medium">{n.title}</p>
                 <p className="text-sm text-slate-700">{n.body}</p>
                 <p className="mt-1 text-xs text-slate-500">{when(n.created_at)}</p>

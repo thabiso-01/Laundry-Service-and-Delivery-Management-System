@@ -20,7 +20,7 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
   return (
     <button type="button" onClick={onClick} aria-pressed={active}
       className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition ${
-        active ? "bg-brand-600 text-white shadow-sm shadow-brand-600/25" : "bg-white text-slate-600 ring-1 ring-slate-200 hover:text-slate-900"}`}>
+        active ? "bg-brand-600 text-white shadow-sm shadow-brand-600/25" : "bg-surface text-slate-600 ring-1 ring-slate-200 hover:text-slate-900"}`}>
       {children}
     </button>
   );
@@ -72,19 +72,19 @@ export function Search() {
   return (
     <div className="space-y-7">
       {/* Blue header: greeting, location, search */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 p-5 text-white shadow-raised sm:p-7">
-        <div aria-hidden className="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-white/10" />
-        <div aria-hidden className="pointer-events-none absolute -bottom-24 right-24 h-48 w-48 rounded-full bg-white/5" />
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-500 via-brand-600 to-deep p-5 text-white shadow-raised sm:p-7">
+        <div aria-hidden className="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-surface/10" />
+        <div aria-hidden className="pointer-events-none absolute -bottom-24 right-24 h-48 w-48 rounded-full bg-surface/5" />
         <div className="relative flex flex-wrap items-start justify-between gap-3">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{firstName ? `Hi, ${firstName}!` : "Find a laundry"}</h1>
-            <p className="mt-1 flex items-center gap-1.5 text-sm text-brand-100">
+            <p className="mt-1 flex items-center gap-1.5 text-sm text-white/85">
               <Icon name="pin" className="h-4 w-4" />
               {usingDefault ? "Near Johannesburg CBD" : "Near your location"}
             </p>
           </div>
           <button type="button" onClick={() => void locate()} disabled={locating}
-            className="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-sm font-medium ring-1 ring-white/25 backdrop-blur transition hover:bg-white/25 disabled:opacity-70">
+            className="inline-flex items-center gap-2 rounded-full bg-surface/15 px-4 py-2 text-sm font-medium ring-1 ring-white/25 backdrop-blur transition hover:bg-surface/25 disabled:opacity-70">
             {locating ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" /> : <Icon name="navigation" className="h-4 w-4" />}
             Use my location
           </button>
@@ -93,13 +93,13 @@ export function Search() {
           <div className="relative flex-1">
             <Icon name="search" className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input aria-label="Search" placeholder="Search laundries, suburbs or cities" value={q} onChange={(e) => setQ(e.target.value)}
-              className="block h-12 w-full rounded-2xl border-0 bg-white pl-11 pr-4 text-sm text-slate-900 shadow-sm outline-none placeholder:text-slate-400 focus:ring-4 focus:ring-white/40" />
+              className="block h-12 w-full rounded-2xl border-0 bg-surface pl-11 pr-4 text-sm text-slate-900 shadow-sm outline-none placeholder:text-slate-400 focus:ring-4 focus:ring-white/40" />
           </div>
-          <button type="submit" aria-label="Search now" className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white text-brand-600 shadow-sm transition hover:bg-brand-50">
+          <button type="submit" aria-label="Search now" className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-surface text-brand-600 shadow-sm transition hover:bg-brand-50">
             <Icon name="arrowRight" />
           </button>
         </form>
-        {locError && <p className="relative mt-3 rounded-xl bg-white/15 px-3 py-2 text-sm">{locError}</p>}
+        {locError && <p className="relative mt-3 rounded-xl bg-surface/15 px-3 py-2 text-sm">{locError}</p>}
       </section>
 
       {/* Services */}
@@ -116,7 +116,7 @@ export function Search() {
               <button key={c} type="button" aria-pressed={active} onClick={() => update({ category: active ? "" : c, sort: active && sort === "price" ? "distance" : sort })}
                 className="group flex w-20 shrink-0 flex-col items-center gap-2 sm:w-auto">
                 <span className={`grid h-16 w-16 place-items-center rounded-full transition ${
-                  active ? "bg-brand-600 text-white shadow-md shadow-brand-600/30" : "bg-white text-brand-600 shadow-card ring-1 ring-slate-100 group-hover:bg-brand-50"}`}>
+                  active ? "bg-brand-600 text-white shadow-md shadow-brand-600/30" : "bg-surface text-brand-600 shadow-card ring-1 ring-slate-100 group-hover:bg-brand-50"}`}>
                   <Icon name={info.icon} className="h-7 w-7" />
                 </span>
                 <span className={`text-xs font-medium ${active ? "text-brand-700" : "text-slate-600"}`}>{info.name}</span>
@@ -136,7 +136,7 @@ export function Search() {
           <label className="flex items-center gap-2 text-sm text-slate-500">
             <span className="sr-only sm:not-sr-only">Within</span>
             <select aria-label="Distance" value={radius} onChange={(e) => update({ radius: e.target.value })}
-              className="rounded-full border-0 bg-white py-1.5 pl-3 pr-8 text-sm font-medium text-slate-700 ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-brand-600">
+              className="rounded-full border-0 bg-surface py-1.5 pl-3 pr-8 text-sm font-medium text-slate-700 ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-brand-600">
               {["5", "10", "15", "25", "50"].map((r) => <option key={r} value={r}>{r} km</option>)}
             </select>
           </label>
@@ -153,16 +153,16 @@ export function Search() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {data.items.map((l) => (
               <Link key={l.id} to={`/laundries/${l.id}?lat=${lat}&lng=${lng}`}
-                className="group flex flex-col overflow-hidden rounded-3xl bg-white p-2 shadow-card ring-1 ring-slate-100 transition hover:-translate-y-0.5 hover:shadow-raised">
+                className="group flex flex-col overflow-hidden rounded-3xl bg-surface p-2 shadow-card ring-1 ring-slate-100 transition hover:-translate-y-0.5 hover:shadow-raised">
                 <div className="relative h-40 overflow-hidden rounded-2xl">
                   <CoverImage src={l.photo_url} name={l.business_name} className="h-full w-full transition duration-500 group-hover:scale-105" />
                   {l.rating_avg != null && (
-                    <span className="absolute left-2.5 top-2.5 inline-flex items-center gap-1 rounded-full bg-white/95 px-2 py-0.5 text-xs font-semibold text-slate-800 shadow-sm">
+                    <span className="absolute left-2.5 top-2.5 inline-flex items-center gap-1 rounded-full bg-surface/95 px-2 py-0.5 text-xs font-semibold text-slate-800 shadow-sm">
                       <Icon name="star" className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />{l.rating_avg.toFixed(1)}
                       <span className="font-normal text-slate-500">({l.rating_count})</span>
                     </span>
                   )}
-                  <span className="absolute right-2.5 top-2.5 rounded-full bg-slate-900/60 px-2 py-0.5 text-xs font-medium text-white backdrop-blur">{l.distance_km.toFixed(1)} km</span>
+                  <span className="absolute right-2.5 top-2.5 rounded-full bg-ink-900/60 px-2 py-0.5 text-xs font-medium text-white backdrop-blur">{l.distance_km.toFixed(1)} km</span>
                 </div>
                 <div className="flex flex-1 flex-col px-3 pb-3 pt-3">
                   <h3 className="font-semibold text-slate-900 group-hover:text-brand-700">{l.business_name}</h3>

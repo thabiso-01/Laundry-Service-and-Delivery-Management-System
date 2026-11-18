@@ -41,7 +41,7 @@ export function Landing() {
       <section className="relative overflow-hidden bg-gradient-to-b from-brand-50 to-slate-50">
         <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-14 sm:px-6 sm:py-20 lg:grid-cols-2 lg:py-10">
           <div>
-            <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-medium text-brand-800 shadow-sm ring-1 ring-brand-100">
+            <span className="inline-flex items-center gap-2 rounded-full bg-surface px-3 py-1 text-xs font-medium text-brand-800 shadow-sm ring-1 ring-brand-100">
               <Icon name="pin" className="h-3.5 w-3.5" /> Now serving Johannesburg
             </span>
             <h1 className="mt-5 text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl">
@@ -61,7 +61,7 @@ export function Landing() {
           <div className="relative mx-auto w-full max-w-md lg:ml-auto">
             <img src="/images/hero-linen.jpg" alt="Freshly washed linen, neatly folded" width={800} height={1422}
               className="aspect-[4/5] w-full rounded-3xl object-cover object-bottom shadow-raised sm:aspect-square" fetchPriority="high" />
-            <div className="absolute inset-x-4 bottom-4 rounded-2xl border border-white/60 bg-white/95 p-4 shadow-raised backdrop-blur sm:inset-x-5 sm:bottom-5">
+            <div className="absolute inset-x-4 bottom-4 rounded-2xl border border-white/60 bg-surface/95 p-4 shadow-raised backdrop-blur sm:inset-x-5 sm:bottom-5">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-xs font-medium text-slate-500">Order LC-7K2M9QX4</p>
@@ -107,7 +107,7 @@ export function Landing() {
           {HOW.map(([icon, title, text], i) => (
             <div key={title}>
               <div className="flex items-center gap-3">
-                <span className="grid h-10 w-10 place-items-center rounded-lg bg-brand-700 text-white"><Icon name={icon} /></span>
+                <span className="grid h-10 w-10 place-items-center rounded-lg bg-deep text-white"><Icon name={icon} /></span>
                 <span className="text-sm font-medium text-slate-400">Step {i + 1}</span>
               </div>
               <h3 className="mt-4 font-semibold text-slate-900">{title}</h3>
@@ -118,7 +118,7 @@ export function Landing() {
       </section>
 
       {/* Trust */}
-      <section className="border-y border-slate-200 bg-white">
+      <section className="border-y border-slate-200 bg-surface">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
           <div className="max-w-2xl">
             <h2 className="text-2xl font-semibold tracking-tight text-slate-900">Your clothes never go missing</h2>
@@ -142,18 +142,18 @@ export function Landing() {
           ["store", "Run a laundry?", "Get paid orders from customers nearby. Manage services, prices and staff in one place.", "List your laundry", "/images/laundry-shop.jpg"],
           ["truck", "Have a vehicle?", "Pick up collection and delivery jobs near you and get paid for every trip.", "Drive with us", null],
         ] as [IconName, string, string, string, string | null][]).map(([icon, title, text, cta, photo]) => (
-          <div key={title} className="relative isolate flex min-h-72 flex-col overflow-hidden rounded-2xl bg-slate-900 p-7 text-white">
+          <div key={title} className="relative isolate flex min-h-72 flex-col overflow-hidden rounded-2xl bg-ink-900 p-7 text-white">
             {photo ? (
               <>
                 <img src={photo} alt="" loading="lazy" className="absolute inset-0 -z-10 h-full w-full object-cover" />
-                <div className="absolute inset-0 -z-10 bg-gradient-to-t from-slate-950/95 via-slate-900/75 to-slate-900/30" />
+                <div className="absolute inset-0 -z-10 bg-gradient-to-t from-ink-950/95 via-ink-900/75 to-ink-900/30" />
               </>
             ) : (
-              <div className="absolute inset-0 -z-10 bg-gradient-to-br from-brand-900 via-slate-900 to-slate-950" />
+              <div className="absolute inset-0 -z-10 bg-gradient-to-br from-deep-900 via-ink-900 to-ink-950" />
             )}
             <Icon name={icon} className="h-7 w-7 text-brand-300" />
             <h3 className="mt-4 text-xl font-semibold">{title}</h3>
-            <p className="mt-2 flex-1 text-slate-300">{text}</p>
+            <p className="mt-2 flex-1 text-white/75">{text}</p>
             <Link to="/register" className="mt-6 inline-flex items-center gap-1.5 self-start font-medium text-brand-300 hover:text-white">
               {cta} <Icon name="arrowRight" className="h-4 w-4" />
             </Link>
@@ -175,10 +175,10 @@ function AuthFrame({ title, sub, children, footer, wide, photo = true }: { title
       {form}
       <aside className="relative hidden overflow-hidden rounded-3xl lg:sticky lg:top-24 lg:block">
         <img src="/images/laundry-basket.jpg" alt="A basket of laundry ready to be collected" className="aspect-[4/5] w-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-900/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-ink-950/85 via-ink-900/20 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 p-7 text-white">
           <p className="text-xl font-semibold">Leave the laundry to us.</p>
-          <ul className="mt-4 space-y-2 text-sm text-slate-200">
+          <ul className="mt-4 space-y-2 text-sm text-white/80">
             {["Collected from your door", "Cleaned by verified local laundries", "Sealed and tracked at every step"].map((t) => (
               <li key={t} className="flex items-center gap-2"><Icon name="checkCircle" className="h-4 w-4 text-emerald-400" />{t}</li>
             ))}
@@ -196,7 +196,7 @@ function FormColumn({ title, sub, children, footer, wide }: { title: string; sub
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{title}</h1>
         {sub && <p className="mt-1.5 text-sm text-slate-500">{sub}</p>}
       </div>
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card sm:p-8">{children}</div>
+      <div className="rounded-2xl border border-slate-200 bg-surface p-6 shadow-card sm:p-8">{children}</div>
       {footer && <p className="mt-6 text-center text-sm text-slate-600">{footer}</p>}
     </div>
   );

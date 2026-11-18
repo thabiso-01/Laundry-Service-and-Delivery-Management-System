@@ -160,7 +160,7 @@ function ShopPhoto({ profile, onChange }: { profile: Profile; onChange: (p: Prof
           <p className="text-xs text-slate-500">Don't show customers' or staff members' faces without their permission (POPIA).
             Hidden information in the file, like GPS location, is removed automatically.</p>
           <div className="flex flex-wrap gap-2">
-            <label className={`inline-flex h-10 cursor-pointer items-center gap-2 rounded-xl bg-brand-600 px-4 font-medium text-white shadow-sm shadow-brand-600/25 hover:bg-brand-700 ${busy ? "pointer-events-none opacity-60" : ""}`}>
+            <label className={`inline-flex h-10 cursor-pointer items-center gap-2 rounded-xl bg-brand-600 px-4 font-medium text-white shadow-sm shadow-brand-600/25 hover:bg-deep ${busy ? "pointer-events-none opacity-60" : ""}`}>
               <Icon name="upload" className="h-4 w-4" /> {profile.photo_url ? "Change photo" : "Upload photo"}
               <input type="file" accept="image/jpeg,image/png" className="sr-only" disabled={busy}
                 onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) upload(f); }} />

@@ -111,7 +111,7 @@ export function AddressPicker({ value, onChange, label = "Address", required }: 
           onChange={(e) => setQuery(e.target.value)} onFocus={() => results.length && setOpen(true)}
           hint={searching ? "Searching…" : undefined} autoComplete="off" />
         {open && results.length > 0 && (
-          <ul className="absolute z-[1000] mt-1 max-h-64 w-full overflow-auto rounded-lg border border-slate-200 bg-white shadow-lg">
+          <ul className="absolute z-[1000] mt-1 max-h-64 w-full overflow-auto rounded-lg border border-slate-200 bg-surface shadow-lg">
             {results.map((r, i) => (
               <li key={i}>
                 <button type="button" className="block w-full px-3 py-2 text-left text-sm hover:bg-brand-50"

@@ -72,8 +72,8 @@ export function OrderProgress({ order, explain = true }: { order: Order; explain
               return (
                 <li key={s.status} className="relative flex flex-col items-center text-center">
                   {i > 0 && <span className={`absolute right-1/2 top-3.5 h-0.5 w-full -translate-y-1/2 ${i <= current ? "bg-brand-600" : "bg-slate-200"}`} />}
-                  <span className={`relative z-[1] grid h-7 w-7 place-items-center rounded-full text-xs font-semibold ring-4 ring-white ${
-                    done ? "bg-brand-600 text-white" : now ? "bg-white text-brand-700 ring-brand-100 outline-2 outline-brand-600" : "bg-slate-100 text-slate-400"}`}>
+                  <span className={`relative z-[1] grid h-7 w-7 place-items-center rounded-full text-xs font-semibold ring-4 ring-surface ${
+                    done ? "bg-brand-600 text-white" : now ? "bg-surface text-brand-700 ring-brand-100 outline-2 outline-brand-600" : "bg-slate-100 text-slate-400"}`}>
                     {done ? <Icon name="check" className="h-3.5 w-3.5" /> : i + 1}
                   </span>
                   <span className={`mt-2 text-xs font-medium ${done || now ? "text-slate-900" : "text-slate-400"}`}>{s.title}</span>
@@ -95,7 +95,7 @@ export function Timeline({ events }: { events: StatusEvent[] }) {
     <ol className="relative space-y-4 before:absolute before:inset-y-1 before:left-[5px] before:w-px before:bg-slate-200">
       {[...events].reverse().map((e, i) => (
         <li key={i} className="relative pl-6 text-sm">
-          <span className={`absolute left-0 top-1.5 h-[11px] w-[11px] rounded-full ring-4 ring-white ${i === 0 ? "bg-brand-600" : "bg-slate-300"}`} />
+          <span className={`absolute left-0 top-1.5 h-[11px] w-[11px] rounded-full ring-4 ring-surface ${i === 0 ? "bg-brand-600" : "bg-slate-300"}`} />
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <span className="font-medium text-slate-900">{statusText(e.to_status)}</span>
             <span className="text-slate-400">·</span>

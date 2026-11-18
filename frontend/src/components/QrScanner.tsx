@@ -139,7 +139,7 @@ export function QrScanner({ onResult, onClose }: { onResult: (code: string) => v
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" role="dialog" aria-label="Scan bag label">
-      <div className="w-full max-w-md rounded-2xl bg-white p-4 shadow-xl">
+      <div className="w-full max-w-md rounded-2xl bg-surface p-4 shadow-xl">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="font-semibold">Scan the bag label</h2>
           <button onClick={onClose} className="rounded-lg px-2 py-1 text-slate-500 hover:bg-slate-100" aria-label="Close">✕</button>
@@ -184,7 +184,7 @@ export function BagCodeField({ value, onChange, label = "Bag label code" }: {
       <label className="mb-1.5 block text-sm font-medium text-slate-700" htmlFor="bag-code">{label}</label>
       <div className="flex gap-2">
         <input id="bag-code" value={value} onChange={(e) => onChange(e.target.value)} placeholder="LCQ1.LC-…" autoComplete="off"
-          className="block h-10 min-w-0 flex-1 rounded-lg border-0 bg-white px-3 font-mono text-sm shadow-sm ring-1 ring-inset ring-slate-300 outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-brand-600" />
+          className="block h-10 min-w-0 flex-1 rounded-lg border-0 bg-surface px-3 font-mono text-sm shadow-sm ring-1 ring-inset ring-slate-300 outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-brand-600" />
         <Button type="button" icon="camera" onClick={() => setScanning(true)}>Scan</Button>
       </div>
       {value && valid

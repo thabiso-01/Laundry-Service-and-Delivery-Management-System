@@ -19,6 +19,15 @@
   --color-brand-950: #1c2551;
 
   --color-canvas: #f5f7ff;
+  --color-surface: #ffffff;
+
+  /* Colours that stay the same in light and dark mode (photo overlays,
+     button hovers, the dark price bar) */
+  --color-ink-900: #0f172a;
+  --color-ink-950: #020617;
+  --color-deep: #3651d8;
+  --color-deep-900: #2a3c88;
+  --color-rose-deep: #be123c;
 
   --shadow-card: 0 1px 2px 0 rgb(30 41 99 / 0.04), 0 4px 16px -4px rgb(30 41 99 / 0.08);
   --shadow-raised: 0 12px 32px -8px rgb(30 41 99 / 0.18), 0 4px 8px -4px rgb(30 41 99 / 0.08);
@@ -39,6 +48,71 @@
   input[type="number"]::-webkit-inner-spin-button {
     opacity: 1;
   }
+}
+
+/* Dark mode: the switch puts class="dark" on <html>. Instead of a dark: variant
+   on every class, the palette itself is swapped: light greys become dark and
+   dark greys light, pale tints become deep ones, and dark text becomes light. */
+html.dark {
+  color-scheme: dark;
+  --color-canvas: #0b1121;
+  --color-surface: #131b2e;
+
+  --color-slate-50: #182238;
+  --color-slate-100: #1f2a42;
+  --color-slate-200: #2a3652;
+  --color-slate-300: #3b4866;
+  --color-slate-400: #7d8ba6;
+  --color-slate-500: #98a5bb;
+  --color-slate-600: #b0bccd;
+  --color-slate-700: #cbd5e1;
+  --color-slate-800: #e2e8f0;
+  --color-slate-900: #f1f5f9;
+  --color-slate-950: #f8fafc;
+
+  --color-brand-50: #1b2452;
+  --color-brand-100: #232e66;
+  --color-brand-200: #303d82;
+  --color-brand-300: #34428a;
+  --color-brand-700: #a6b6fd;
+  --color-brand-800: #cbd4ff;
+  --color-brand-900: #e3e8ff;
+
+  --color-emerald-50: #0e2a22;
+  --color-emerald-100: #12372b;
+  --color-emerald-200: #1a4d3b;
+  --color-emerald-700: #6ee7b7;
+  --color-emerald-800: #a7f3d0;
+  --color-emerald-900: #d1fae5;
+
+  --color-rose-50: #2e1220;
+  --color-rose-100: #3d1729;
+  --color-rose-200: #5c2039;
+  --color-rose-700: #fda4af;
+  --color-rose-800: #fecdd3;
+  --color-rose-900: #ffe4e6;
+
+  --color-amber-50: #2c2110;
+  --color-amber-100: #3b2c13;
+  --color-amber-200: #5a4317;
+  --color-amber-700: #fcd34d;
+  --color-amber-800: #fde68a;
+  --color-amber-900: #fef3c7;
+
+  --color-violet-50: #241a47;
+  --color-violet-100: #2e2159;
+  --color-violet-700: #c4b5fd;
+  --color-violet-800: #ddd6fe;
+
+  --shadow-card: 0 1px 2px 0 rgb(0 0 0 / 0.3), 0 4px 16px -4px rgb(0 0 0 / 0.35);
+  --shadow-raised: 0 12px 32px -8px rgb(0 0 0 / 0.55), 0 4px 8px -4px rgb(0 0 0 / 0.35);
+}
+html.dark .leaflet-control-attribution {
+  background: rgb(19 27 46 / 0.85) !important;
+  color: var(--color-slate-500);
+}
+html.dark .leaflet-bar a {
+  background: var(--color-surface) !important;
 }
 
 /* Printing a bag label: only the label */

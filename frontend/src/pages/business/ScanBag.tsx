@@ -34,7 +34,7 @@ export function ScanBag() {
           <div className="space-y-5">
             <button onClick={() => setScanning(true)}
               className="flex w-full flex-col items-center gap-3 rounded-xl border-2 border-dashed border-brand-200 bg-brand-50/50 px-4 py-8 text-brand-800 transition hover:border-brand-400 hover:bg-brand-50">
-              <span className="grid h-14 w-14 place-items-center rounded-full bg-brand-700 text-white shadow-sm"><Icon name="camera" className="h-6 w-6" /></span>
+              <span className="grid h-14 w-14 place-items-center rounded-full bg-deep text-white shadow-sm"><Icon name="camera" className="h-6 w-6" /></span>
               <span className="font-semibold">Scan with camera</span>
               <span className="text-sm text-slate-500">Point it at the QR label on the bag</span>
             </button>

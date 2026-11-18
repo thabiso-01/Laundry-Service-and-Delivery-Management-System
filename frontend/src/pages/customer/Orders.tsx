@@ -62,7 +62,7 @@ function CodeCard({ order }: { order: Order }) {
   }
   if (!data) return null;
   return (
-    <section className="overflow-hidden rounded-xl border border-brand-200 bg-white shadow-card">
+    <section className="overflow-hidden rounded-xl border border-brand-200 bg-surface shadow-card">
       <div className="flex flex-wrap items-center gap-x-6 gap-y-4 bg-brand-50/60 p-5">
         <div className="min-w-0 flex-1 basis-60">
           <h2 className="flex items-center gap-2 text-[15px] font-semibold text-slate-900">
@@ -73,7 +73,7 @@ function CodeCard({ order }: { order: Order }) {
             Give this code to the driver <b>only when they are at your door</b> with your bag. Never share it over the phone.
           </p>
         </div>
-        <div className="rounded-xl bg-white px-5 py-3 text-center shadow-sm ring-1 ring-brand-100">
+        <div className="rounded-xl bg-surface px-5 py-3 text-center shadow-sm ring-1 ring-brand-100">
           <p className="font-mono text-4xl font-bold tracking-[0.25em] text-brand-800">{data.code}</p>
           <p className="mt-1 text-xs text-slate-500">Valid until {when(data.expires_at)}</p>
         </div>

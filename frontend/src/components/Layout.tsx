@@ -4,6 +4,7 @@ import { api } from "../api/client";
 import type { Role } from "../api/types";
 import { useAuth } from "../auth/AuthContext";
 import { Icon, Logo, type IconName } from "./icons";
+import { ThemeToggle } from "./ThemeToggle";
 import { Spinner } from "./ui";
 
 type NavItem = { to: string; text: string; icon: IconName; end?: boolean };
@@ -64,7 +65,7 @@ function Bell() {
       <Icon name="bell" />
       <span className="sr-only">Notifications{unread > 0 && ` (${unread} unread)`}</span>
       {unread > 0 && (
-        <span className="absolute right-0.5 top-0.5 min-w-4 rounded-full bg-rose-600 px-1 text-center text-[10px] leading-4 font-semibold text-white ring-2 ring-white">
+        <span className="absolute right-0.5 top-0.5 min-w-4 rounded-full bg-rose-600 px-1 text-center text-[10px] leading-4 font-semibold text-white ring-2 ring-surface">
           {unread > 99 ? "99+" : unread}
         </span>
       )}
@@ -103,7 +104,7 @@ function AccountMenu() {
         <Icon name="chevronDown" className="hidden h-4 w-4 text-slate-400 sm:block" />
       </button>
       {open && (
-        <div role="menu" className="absolute right-0 z-30 mt-2 w-60 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-raised">
+        <div role="menu" className="absolute right-0 z-30 mt-2 w-60 overflow-hidden rounded-xl border border-slate-200 bg-surface shadow-raised">
           <div className="border-b border-slate-100 px-4 py-3">
             <p className="truncate text-sm font-medium text-slate-900">{me.full_name}</p>
             <p className="truncate text-xs text-slate-500">{me.email}</p>
@@ -154,7 +155,7 @@ function AppShell() {
   return (
     <div className="min-h-screen bg-canvas">
       {/* Desktop sidebar */}
-      <aside className="no-print fixed inset-y-0 left-0 z-20 hidden w-64 flex-col border-r border-slate-100 bg-white lg:flex">
+      <aside className="no-print fixed inset-y-0 left-0 z-20 hidden w-64 flex-col border-r border-slate-100 bg-surface lg:flex">
         <div className="flex h-16 items-center px-5"><Link to="/"><Logo /></Link></div>
         <div className="flex-1 overflow-y-auto px-3 py-4"><SideNav items={items} /></div>
         <div className="border-t border-slate-100 px-5 py-4 text-xs text-slate-400">
@@ -165,8 +166,8 @@ function AppShell() {
       {/* Phone menu */}
       {open && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-slate-900/40" onClick={() => setOpen(false)} />
-          <div className="absolute inset-y-0 left-0 flex w-72 max-w-[85%] flex-col bg-white shadow-xl">
+          <div className="absolute inset-0 bg-ink-900/40" onClick={() => setOpen(false)} />
+          <div className="absolute inset-y-0 left-0 flex w-72 max-w-[85%] flex-col bg-surface shadow-xl">
             <div className="flex h-16 items-center justify-between px-4">
               <Logo />
               <button className="grid h-9 w-9 place-items-center rounded-lg text-slate-500 hover:bg-slate-100" onClick={() => setOpen(false)} aria-label="Close menu">
@@ -188,9 +189,10 @@ function AppShell() {
       )}
 
       <div className="lg:pl-64">
-        <header className="no-print sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-slate-200 bg-white px-4 shadow-sm sm:px-6">
+        <header className="no-print sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-slate-200 bg-surface px-4 shadow-sm sm:px-6">
           <Link to="/" className="lg:hidden"><Logo /></Link>
           <div className="ml-auto flex items-center gap-1.5">
+            <ThemeToggle />
             {me && !me.must_change_password && <Bell />}
             <AccountMenu />
           </div>
@@ -230,7 +232,7 @@ const TABS: Record<Role, NavItem[]> = {
 
 function TabBar({ role, onMore, moreOpen }: { role: Role; onMore: () => void; moreOpen: boolean }) {
   return (
-    <nav aria-label="Tabs" className="no-print fixed inset-x-0 bottom-0 z-30 border-t border-slate-100 bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_20px_-8px_rgb(30_41_99/0.15)] backdrop-blur lg:hidden">
+    <nav aria-label="Tabs" className="no-print fixed inset-x-0 bottom-0 z-30 border-t border-slate-100 bg-surface/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_20px_-8px_rgb(30_41_99/0.15)] backdrop-blur lg:hidden">
       <div className="mx-auto grid max-w-md grid-cols-4">
         {TABS[role].map((t) => (
           <NavLink key={t.to} to={t.to} end={t.end ?? true}
@@ -261,20 +263,21 @@ function PublicShell() {
   const wide = location.pathname === "/";
   return (
     <div className="flex min-h-screen flex-col bg-canvas">
-      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white shadow-sm">
+      <header className="sticky top-0 z-40 border-b border-slate-200 bg-surface shadow-sm">
         <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4 sm:px-6">
           <Link to="/"><Logo /></Link>
           <nav className="ml-auto flex items-center gap-1 sm:gap-2">
+            <ThemeToggle />
             <NavLink to="/search" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 sm:block">Find a laundry</NavLink>
             <NavLink to="/login" className="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">Log in</NavLink>
-            <NavLink to="/register" className="rounded-full bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-sm shadow-brand-600/25 hover:bg-brand-700">Sign up</NavLink>
+            <NavLink to="/register" className="rounded-full bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-sm shadow-brand-600/25 hover:bg-deep">Sign up</NavLink>
           </nav>
         </div>
       </header>
       <main className={wide ? "flex-1" : "mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6"}>
         <Outlet />
       </main>
-      <footer className="border-t border-slate-200 bg-white">
+      <footer className="border-t border-slate-200 bg-surface">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-6 text-sm text-slate-500 sm:px-6">
           <span>© {new Date().getFullYear()} LaundryConnect · South Africa</span>
           <span className="inline-flex items-center gap-1.5"><Icon name="lock" className="h-4 w-4" /> Your data is protected under POPIA</span>

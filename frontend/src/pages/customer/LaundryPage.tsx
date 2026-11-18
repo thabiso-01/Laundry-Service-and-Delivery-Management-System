@@ -92,19 +92,19 @@ export function LaundryPage() {
       {/* Cover photo with name and rating */}
       <section className="relative mb-6 overflow-hidden rounded-3xl shadow-raised">
         <CoverImage src={l.photo_url} name={l.business_name} className="h-56 w-full sm:h-72" />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-900/30 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-ink-950/85 via-ink-900/30 to-transparent" />
         <Link to={`/search?lat=${lat}&lng=${lng}`} aria-label="All laundries"
-          className="absolute left-4 top-4 grid h-10 w-10 place-items-center rounded-full bg-white/90 text-slate-800 shadow-sm backdrop-blur hover:bg-white">
+          className="absolute left-4 top-4 grid h-10 w-10 place-items-center rounded-full bg-surface/90 text-slate-800 shadow-sm backdrop-blur hover:bg-surface">
           <Icon name="arrowLeft" className="h-5 w-5" />
         </Link>
         <div className="absolute inset-x-0 bottom-0 p-5 text-white sm:p-7">
-          <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-medium backdrop-blur">
+          <span className="inline-flex items-center gap-1 rounded-full bg-surface/20 px-2.5 py-0.5 text-xs font-medium backdrop-blur">
             <Icon name="washer" className="h-3.5 w-3.5" /> Laundry
           </span>
           <h1 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">{l.business_name}</h1>
-          <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-200">
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-white/80">
             {l.rating_avg != null
-              ? <span className="inline-flex items-center gap-1 font-medium text-white"><Icon name="star" className="h-4 w-4 fill-amber-400 text-amber-400" />{l.rating_avg.toFixed(1)} <span className="font-normal text-slate-300">({l.rating_count} reviews)</span></span>
+              ? <span className="inline-flex items-center gap-1 font-medium text-white"><Icon name="star" className="h-4 w-4 fill-amber-400 text-amber-400" />{l.rating_avg.toFixed(1)} <span className="font-normal text-white/75">({l.rating_count} reviews)</span></span>
               : <span>No ratings yet</span>}
             <span className="inline-flex items-center gap-1"><Icon name="pin" className="h-4 w-4" />{[l.suburb, l.city].filter(Boolean).join(", ")}</span>
             {l.distance_km != null && <span>{l.distance_km.toFixed(1)} km away</span>}
@@ -153,9 +153,9 @@ export function LaundryPage() {
                           className="grid h-8 w-8 place-items-center rounded-full text-lg leading-none text-brand-600 ring-1 ring-brand-200 transition hover:bg-brand-50 disabled:text-slate-300 disabled:ring-slate-200">−</button>
                         <input type="number" min={0} max={100} aria-label={`Quantity of ${s.name}`} value={n}
                           onChange={(e) => setQuantity(s.id, Number(e.target.value))}
-                          className="h-8 w-10 rounded-lg bg-transparent text-center text-sm font-semibold tabular-nums outline-none [appearance:textfield] focus:bg-white focus:ring-2 focus:ring-brand-600 [&::-webkit-inner-spin-button]:appearance-none" />
+                          className="h-8 w-10 rounded-lg bg-transparent text-center text-sm font-semibold tabular-nums outline-none [appearance:textfield] focus:bg-surface focus:ring-2 focus:ring-brand-600 [&::-webkit-inner-spin-button]:appearance-none" />
                         <button type="button" aria-label={`More ${s.name}`} onClick={() => setQuantity(s.id, n + 1)}
-                          className="grid h-8 w-8 place-items-center rounded-full bg-brand-600 text-lg leading-none text-white shadow-sm shadow-brand-600/30 transition hover:bg-brand-700">+</button>
+                          className="grid h-8 w-8 place-items-center rounded-full bg-brand-600 text-lg leading-none text-white shadow-sm shadow-brand-600/30 transition hover:bg-deep">+</button>
                       </div>
                     )}
                   </li>
@@ -235,8 +235,8 @@ export function LaundryPage() {
                   )}
                   {quote && <p className="text-center text-xs text-slate-500">You'll pay on the next screen.</p>}
                   {chosen.length > 0 && !quote && (
-                    <div className="fixed inset-x-3 bottom-[76px] z-20 flex items-center gap-3 rounded-2xl bg-slate-900 p-3 pl-4 text-white shadow-raised lg:hidden">
-                      <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/10"><Icon name="washer" /></span>
+                    <div className="fixed inset-x-3 bottom-[76px] z-20 flex items-center gap-3 rounded-2xl bg-ink-900 p-3 pl-4 text-white shadow-raised lg:hidden">
+                      <span className="grid h-10 w-10 place-items-center rounded-xl bg-surface/10"><Icon name="washer" /></span>
                       <div className="min-w-0 flex-1 leading-tight">
                         <p className="text-sm font-semibold">{itemCount} item{itemCount === 1 ? "" : "s"} · {rands(estimate)}</p>
                         <p className="text-xs text-slate-400">plus collection & delivery</p>

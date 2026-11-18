@@ -66,14 +66,14 @@ export function DriverHome() {
         sub={ratings.data?.rating_avg != null
           ? <span className="inline-flex items-center gap-1"><Icon name="star" className="h-4 w-4 fill-amber-300 text-amber-300" />{ratings.data.rating_avg.toFixed(1)} from {ratings.data.rating_count} rating{ratings.data.rating_count === 1 ? "" : "s"}</span>
           : "No ratings yet"}>
-        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-white/10 p-4 ring-1 ring-white/15 backdrop-blur">
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-surface/10 p-4 ring-1 ring-white/15 backdrop-blur">
           <div className="flex items-center gap-3">
-            <span className={`grid h-11 w-11 place-items-center rounded-full ${online ? "bg-emerald-400 text-emerald-950" : "bg-white/15 text-white"}`}>
+            <span className={`grid h-11 w-11 place-items-center rounded-full ${online ? "bg-emerald-400 text-emerald-950" : "bg-surface/15 text-white"}`}>
               <Icon name="power" />
             </span>
             <div>
               <p className="font-semibold">{online ? "You're online" : "You're offline"}</p>
-              <p className="text-sm text-brand-100">{online ? "New jobs near you appear below." : "Go online to see and accept jobs."}</p>
+              <p className="text-sm text-white/85">{online ? "New jobs near you appear below." : "Go online to see and accept jobs."}</p>
             </div>
           </div>
           <button type="button" className={heroButton} disabled={busy} onClick={toggle}>
@@ -177,7 +177,7 @@ function JobSteps({ job }: { job: DriverJob }) {
     <ol className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
       {steps.map((s, i) => (
         <li key={s} className="flex items-center gap-2">
-          <span className={`grid h-6 w-6 place-items-center rounded-full text-xs font-semibold ${i < at ? "bg-brand-600 text-white" : i === at ? "bg-white text-brand-700 ring-2 ring-brand-600" : "bg-slate-100 text-slate-400"}`}>
+          <span className={`grid h-6 w-6 place-items-center rounded-full text-xs font-semibold ${i < at ? "bg-brand-600 text-white" : i === at ? "bg-surface text-brand-700 ring-2 ring-brand-600" : "bg-slate-100 text-slate-400"}`}>
             {i < at ? <Icon name="check" className="h-3.5 w-3.5" /> : i + 1}
           </span>
           <span className={i <= at ? "font-medium text-slate-900" : "text-slate-400"}>{s}</span>
