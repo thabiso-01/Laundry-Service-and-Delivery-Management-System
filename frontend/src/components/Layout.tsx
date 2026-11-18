@@ -166,8 +166,8 @@ function AppShell() {
       {/* Phone menu */}
       {open && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-ink-900/40" onClick={() => setOpen(false)} />
-          <div className="absolute inset-y-0 left-0 flex w-72 max-w-[85%] flex-col bg-surface shadow-xl">
+          <div className="absolute inset-0 animate-fade bg-ink-900/40" onClick={() => setOpen(false)} />
+          <div className="absolute inset-y-0 left-0 flex w-72 max-w-[85%] animate-slide-in flex-col bg-surface shadow-xl">
             <div className="flex h-16 items-center justify-between px-4">
               <Logo />
               <button className="grid h-9 w-9 place-items-center rounded-lg text-slate-500 hover:bg-slate-100" onClick={() => setOpen(false)} aria-label="Close menu">
@@ -198,7 +198,7 @@ function AppShell() {
           </div>
         </header>
         <main className="mx-auto max-w-6xl px-4 pt-6 pb-28 sm:px-6 sm:pt-8 lg:pb-8">
-          <Outlet />
+          <div key={location.pathname} className="animate-rise"><Outlet /></div>
         </main>
       </div>
       {me && !me.must_change_password && <TabBar role={me.role} onMore={() => setOpen(true)} moreOpen={open} />}
@@ -275,7 +275,7 @@ function PublicShell() {
         </div>
       </header>
       <main className={wide ? "flex-1" : "mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6"}>
-        <Outlet />
+        <div key={location.pathname} className="animate-rise"><Outlet /></div>
       </main>
       <footer className="border-t border-slate-200 bg-surface">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-6 text-sm text-slate-500 sm:px-6">

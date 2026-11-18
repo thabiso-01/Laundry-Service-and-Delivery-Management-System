@@ -138,8 +138,8 @@ export function QrScanner({ onResult, onClose }: { onResult: (code: string) => v
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" role="dialog" aria-label="Scan bag label">
-      <div className="w-full max-w-md rounded-2xl bg-surface p-4 shadow-xl">
+    <div className="fixed inset-0 z-50 flex animate-fade items-center justify-center bg-black/70 p-4" role="dialog" aria-label="Scan bag label">
+      <div className="w-full max-w-md animate-pop rounded-2xl bg-surface p-4 shadow-xl">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="font-semibold">Scan the bag label</h2>
           <button onClick={onClose} className="rounded-lg px-2 py-1 text-slate-500 hover:bg-slate-100" aria-label="Close">✕</button>

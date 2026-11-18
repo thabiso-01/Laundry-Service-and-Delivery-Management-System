@@ -72,7 +72,7 @@ export function Documents() {
         </p>
       </Card>
 
-      <ul className="space-y-3">
+      <ul className="stagger space-y-3">
         {reqs.map((r) => <RequirementCard key={r.name} req={r} docs={data.documents} onDone={reload} />)}
       </ul>
 

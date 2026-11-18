@@ -61,7 +61,7 @@ export function Landing() {
           <div className="relative mx-auto w-full max-w-md lg:ml-auto">
             <img src="/images/hero-linen.jpg" alt="Freshly washed linen, neatly folded" width={800} height={1422}
               className="aspect-[4/5] w-full rounded-3xl object-cover object-bottom shadow-raised sm:aspect-square" fetchPriority="high" />
-            <div className="absolute inset-x-4 bottom-4 rounded-2xl border border-white/60 bg-surface/95 p-4 shadow-raised backdrop-blur sm:inset-x-5 sm:bottom-5">
+            <div className="absolute inset-x-4 bottom-4 rounded-2xl motion-safe:animate-float border border-white/60 bg-surface/95 p-4 shadow-raised backdrop-blur sm:inset-x-5 sm:bottom-5">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-xs font-medium text-slate-500">Order LC-7K2M9QX4</p>
@@ -72,7 +72,7 @@ export function Landing() {
                 </span>
               </div>
               <div className="mt-3 flex items-center gap-3">
-                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100"><div className="h-full w-[85%] rounded-full bg-brand-600" /></div>
+                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100"><div className="h-full w-[85%] origin-left animate-fill rounded-full bg-brand-600" /></div>
                 <span className="text-xs font-medium text-slate-500">Step 7 of 8</span>
               </div>
               <ul className="mt-3 space-y-2 text-sm">

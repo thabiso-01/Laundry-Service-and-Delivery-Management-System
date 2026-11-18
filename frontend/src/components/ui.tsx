@@ -32,7 +32,7 @@ export function Button({
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: keyof typeof SIZES; icon?: IconName; busy?: boolean }) {
   return (
     <button
-      className={`inline-flex items-center justify-center gap-2 font-medium whitespace-nowrap transition-colors disabled:cursor-not-allowed ${SIZES[size]} ${VARIANTS[variant]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 font-medium whitespace-nowrap transition duration-150 active:scale-[0.97] disabled:active:scale-100 disabled:cursor-not-allowed ${SIZES[size]} ${VARIANTS[variant]} ${className}`}
       disabled={busy || rest.disabled}
       {...rest}
     >
@@ -49,7 +49,7 @@ export function ButtonLink({ to, variant = "primary", size = "md", icon, classNa
   to: string; variant?: Variant; size?: keyof typeof SIZES; icon?: IconName; className?: string; children: ReactNode;
 }) {
   return (
-    <Link to={to} className={`inline-flex items-center justify-center gap-2 font-medium whitespace-nowrap transition-colors ${SIZES[size]} ${VARIANTS[variant]} ${className}`}>
+    <Link to={to} className={`inline-flex items-center justify-center gap-2 font-medium whitespace-nowrap transition duration-150 active:scale-[0.97] disabled:active:scale-100 ${SIZES[size]} ${VARIANTS[variant]} ${className}`}>
       {icon && <Icon name={icon} className="h-4 w-4" />}
       {children}
     </Link>

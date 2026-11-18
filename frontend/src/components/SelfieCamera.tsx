@@ -82,8 +82,8 @@ export function SelfieCamera({ onUse, onClose }: { onUse: (photo: File) => void;
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" role="dialog" aria-modal="true" aria-label="Take a selfie">
-      <div className="w-full max-w-md rounded-2xl bg-surface p-4 shadow-xl sm:p-5">
+    <div className="fixed inset-0 z-50 flex animate-fade items-center justify-center bg-black/70 p-4" role="dialog" aria-modal="true" aria-label="Take a selfie">
+      <div className="w-full max-w-md animate-pop rounded-2xl bg-surface p-4 shadow-xl sm:p-5">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="font-semibold text-slate-900">{shot ? "Check your selfie" : "Take a selfie"}</h2>
           <button onClick={onClose} className="grid h-9 w-9 place-items-center rounded-full text-slate-500 hover:bg-slate-100" aria-label="Close">

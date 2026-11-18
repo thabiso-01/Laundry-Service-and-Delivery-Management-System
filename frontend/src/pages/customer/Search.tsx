@@ -150,7 +150,7 @@ export function Search() {
         {loading ? <Spinner /> : error ? <Alert>{error}</Alert> : !data?.items.length ? (
           <Card><Empty icon="search" title="No laundries found">Try a wider distance or another service.</Empty></Card>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="stagger grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {data.items.map((l) => (
               <Link key={l.id} to={`/laundries/${l.id}?lat=${lat}&lng=${lng}`}
                 className="group flex flex-col overflow-hidden rounded-3xl bg-surface p-2 shadow-card ring-1 ring-slate-100 transition hover:-translate-y-0.5 hover:shadow-raised">

@@ -77,7 +77,7 @@ export function BusinessOrders() {
             <Card><Empty icon="inbox" title="Nothing here right now">New orders appear here as soon as customers pay.</Empty></Card>
           ) : (
             <Card padded={false}>
-              <ul className="divide-y divide-slate-100">
+              <ul className="stagger divide-y divide-slate-100">
                 {list.data.items.map((o) => (
                   <li key={o.id}>
                     <ListRow to={`/business/orders/${o.id}`}>

@@ -37,7 +37,7 @@ export function ThemeToggle() {
   return (
     <button type="button" onClick={toggle} aria-label={label} title={label}
       className="grid h-10 w-10 place-items-center rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900">
-      <Icon name={dark ? "sun" : "moon"} className="h-5 w-5" />
+      <Icon key={dark ? "sun" : "moon"} name={dark ? "sun" : "moon"} className="h-5 w-5 animate-spin-in" />
     </button>
   );
 }

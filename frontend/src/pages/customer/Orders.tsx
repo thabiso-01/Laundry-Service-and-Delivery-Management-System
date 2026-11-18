@@ -23,7 +23,7 @@ export function Orders() {
         </Card>
       ) : (
         <Card padded={false}>
-          <ul className="divide-y divide-slate-100">
+          <ul className="stagger divide-y divide-slate-100">
             {data.items.map((o) => (
               <li key={o.id}>
                 <ListRow to={`/orders/${o.id}`}>
